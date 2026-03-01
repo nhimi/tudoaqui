@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function RestaurantMenu() {
-  const { id } = useParams();
+  const { restaurantId: id } = useParams();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
   const [menuItems, setMenuItems] = useState([]);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from '../components/BottomNav';
-import { Car, UtensilsCrossed, MapPin, Building2, Bell, Shield, BarChart3, Briefcase } from 'lucide-react';
+import { Car, UtensilsCrossed, MapPin, Building2, Bell, Shield, BarChart3, Briefcase, Gift } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 

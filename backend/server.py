@@ -756,491 +756,206 @@ async def get_orders(request: Request):
     
     return orders
 
-class TouristPlace(BaseModel):
-    place_id: str
-    name: str
-    type: str
-    description: str
-    location: str
-    price_per_night: float
-    images: List[str]
-    rating: float
-    amenities: List[str]
-    capacity: int
-
-class BookingCreate(BaseModel):
-    place_id: str
-    check_in: str
-    check_out: str
-    guests: int
-    payment_method: str
-    special_requests: Optional[str] = None
-
-class Booking(BaseModel):
-    booking_id: str
-    user_id: str
-    place_id: str
-    place_name: str
-    place_type: str
-    check_in: str
-    check_out: str
-    guests: int
-    nights: int
-    price_per_night: float
-    total_price: float
-    payment_method: str
-    status: str
-    special_requests: Optional[str] = None
-    created_at: str
-
-@api_router.get("/tourist-places", response_model=List[TouristPlace])
-async def get_tourist_places(request: Request, type: Optional[str] = None):
-    await get_current_user(request)
+@api_router.patch("/orders/{order_id}/status")
+async def update_order_status(request: Request, order_id: str, status_data: dict):
+    """Atualizar status do pedido (para tracking)"""
+    user_id = await get_current_user(request)
     
-    count = await db.tourist_places.count_documents({})
+    new_status = status_data.get("status")
+    valid_statuses = ["confirmado", "pago", "preparando", "a_caminho", "entregue", "cancelado"]
     
-    if count == 0:
-        sample_places = [
-            {
-                "place_id": f"place_{uuid.uuid4().hex[:8]}",
-                "name": "Hotel Epic Sana Luanda",
-                "type": "hotel",
-                "description": "Hotel de luxo com vista para a Baía de Luanda, piscina infinity e spa completo",
-                "location": "Ilha de Luanda, Luanda",
-                "price_per_night": 25000.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1566073771259-6a8506099945?crop=entropy&cs=srgb&fm=jpg&q=85",
-                    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "rating": 4.8,
-                "amenities": ["Wi-Fi", "Piscina", "Spa", "Restaurante", "Bar", "Academia"],
-                "capacity": 2
-            },
-            {
-                "place_id": f"place_{uuid.uuid4().hex[:8]}",
-                "name": "Resort Kwanza Lodge",
-                "type": "resort",
-                "description": "Resort ecológico às margens do Rio Kwanza com safaris e atividades aquáticas",
-                "location": "Rio Kwanza, Bengo",
-                "price_per_night": 18000.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?crop=entropy&cs=srgb&fm=jpg&q=85",
-                    "https://images.unsplash.com/photo-1571896349842-33c89424de2d?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "rating": 4.6,
-                "amenities": ["Safari", "Pesca", "Piscina", "Restaurante", "Wi-Fi", "Passeios de Barco"],
-                "capacity": 4
-            },
-            {
-                "place_id": f"place_{uuid.uuid4().hex[:8]}",
-                "name": "Museu Nacional de Antropologia",
-                "type": "museu",
-                "description": "Acervo rico sobre a história e cultura dos povos de Angola",
-                "location": "Luanda",
-                "price_per_night": 500.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "rating": 4.4,
-                "amenities": ["Guia Turístico", "Audioguia", "Café", "Loja de Souvenirs"],
-                "capacity": 50
-            },
-            {
-                "place_id": f"place_{uuid.uuid4().hex[:8]}",
-                "name": "Parque Nacional da Kissama",
-                "type": "parque",
-                "description": "Santuário de vida selvagem com elefantes, girafas e outras espécies africanas",
-                "location": "Kissama, Bengo",
-                "price_per_night": 1200.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1516426122078-c23e76319801?crop=entropy&cs=srgb&fm=jpg&q=85",
-                    "https://images.unsplash.com/photo-1535338623859-02b29c1686e7?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "rating": 4.7,
-                "amenities": ["Safari Guiado", "Camping", "Observação de Animais", "Trilhas"],
-                "capacity": 10
-            },
-            {
-                "place_id": f"place_{uuid.uuid4().hex[:8]}",
-                "name": "Fortaleza de São Miguel",
-                "type": "atrativo",
-                "description": "Fortaleza histórica portuguesa construída em 1576, agora Museu das Forças Armadas",
-                "location": "Luanda",
-                "price_per_night": 300.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "rating": 4.5,
-                "amenities": ["Visita Guiada", "Museu", "Vista Panorâmica", "Fotografia"],
-                "capacity": 100
-            },
-            {
-                "place_id": f"place_{uuid.uuid4().hex[:8]}",
-                "name": "Miradouro da Lua",
-                "type": "atrativo",
-                "description": "Formações rochosas espetaculares que lembram a superfície lunar",
-                "location": "Bengo",
-                "price_per_night": 200.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "rating": 4.9,
-                "amenities": ["Mirante", "Trilhas", "Piquenique", "Fotografia"],
-                "capacity": 50
-            },
-            {
-                "place_id": f"place_{uuid.uuid4().hex[:8]}",
-                "name": "Pousada Lua de Mel",
-                "type": "hotel",
-                "description": "Acomodação romântica com vista para o oceano Atlântico",
-                "location": "Cabo Ledo, Bengo",
-                "price_per_night": 15000.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "rating": 4.7,
-                "amenities": ["Praia Privada", "Restaurante", "Wi-Fi", "Spa"],
-                "capacity": 2
-            },
-            {
-                "place_id": f"place_{uuid.uuid4().hex[:8]}",
-                "name": "Cataratas de Kalandula",
-                "type": "atrativo",
-                "description": "Uma das maiores quedas d'água de África com 105 metros de altura",
-                "location": "Malanje",
-                "price_per_night": 800.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "rating": 5.0,
-                "amenities": ["Vista Panorâmica", "Trilhas", "Piquenique", "Guia Local"],
-                "capacity": 30
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(valid_statuses)}")
+    
+    order = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    
+    await db.orders.update_one(
+        {"order_id": order_id},
+        {"$set": {
+            "status": new_status,
+            "status_updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        "$push": {
+            "status_history": {
+                "status": new_status,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": user_id
             }
-        ]
-        
-        await db.tourist_places.insert_many(sample_places)
-        places = sample_places
-    else:
-        query = {"type": type} if type else {}
-        places = await db.tourist_places.find(query, {"_id": 0}).to_list(100)
+        }}
+    )
     
-    return places
+    return {"order_id": order_id, "status": new_status, "message": f"Status atualizado para {new_status}"}
 
-@api_router.get("/tourist-places/{place_id}", response_model=TouristPlace)
-async def get_tourist_place(request: Request, place_id: str):
+# ============ AVALIAÇÕES / REVIEWS ============
+
+@api_router.post("/reviews")
+async def create_review(request: Request, review_data: dict):
+    """Criar avaliação de restaurante"""
+    user_id = await get_current_user(request)
+    
+    restaurant_id = review_data.get("restaurant_id")
+    rating = review_data.get("rating", 0)
+    comment = review_data.get("comment", "")
+    
+    if not restaurant_id:
+        raise HTTPException(status_code=400, detail="restaurant_id obrigatório")
+    if rating < 1 or rating > 5:
+        raise HTTPException(status_code=400, detail="Avaliação deve ser entre 1 e 5")
+    
+    restaurant = await db.restaurants.find_one({"restaurant_id": restaurant_id}, {"_id": 0})
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurante não encontrado")
+    
+    # Check for existing review
+    existing = await db.reviews.find_one({"user_id": user_id, "restaurant_id": restaurant_id})
+    if existing:
+        # Update existing review
+        await db.reviews.update_one(
+            {"user_id": user_id, "restaurant_id": restaurant_id},
+            {"$set": {"rating": rating, "comment": comment, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        return {"message": "Avaliação atualizada", "rating": rating}
+    
+    review_id = f"review_{uuid.uuid4().hex[:10]}"
+    user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    
+    review_doc = {
+        "review_id": review_id,
+        "user_id": user_id,
+        "user_name": user_doc.get("name", "Anónimo") if user_doc else "Anónimo",
+        "restaurant_id": restaurant_id,
+        "restaurant_name": restaurant["name"],
+        "rating": rating,
+        "comment": comment,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.reviews.insert_one(review_doc)
+    
+    # Update restaurant average rating
+    all_reviews = await db.reviews.find({"restaurant_id": restaurant_id}, {"_id": 0}).to_list(1000)
+    avg_rating = sum(r["rating"] for r in all_reviews) / len(all_reviews)
+    await db.restaurants.update_one(
+        {"restaurant_id": restaurant_id},
+        {"$set": {"rating": round(avg_rating, 1), "review_count": len(all_reviews)}}
+    )
+    
+    return {"review_id": review_id, "message": "Avaliação enviada", "rating": rating}
+
+@api_router.get("/reviews/{restaurant_id}")
+async def get_restaurant_reviews(request: Request, restaurant_id: str):
+    """Obter avaliações de um restaurante"""
     await get_current_user(request)
     
-    place = await db.tourist_places.find_one({"place_id": place_id}, {"_id": 0})
+    reviews = await db.reviews.find({"restaurant_id": restaurant_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
     
+    avg_rating = 0
+    if reviews:
+        avg_rating = round(sum(r["rating"] for r in reviews) / len(reviews), 1)
+    
+    return {
+        "reviews": reviews,
+        "total": len(reviews),
+        "average_rating": avg_rating
+    }
+
+# ============ BACKWARD COMPAT ROUTES ============
+# Keep old /api/tourist-places, /api/bookings, /api/properties, /api/property-inquiries
+# Frontend still calls these paths
+
+@api_router.get("/tourist-places")
+async def get_tourist_places_compat(request: Request, type: Optional[str] = None):
+    await get_current_user(request)
+    count = await db.tourist_places.count_documents({})
+    if count == 0:
+        from tourism_router import SAMPLE_PLACES
+        await db.tourist_places.insert_many([{**p} for p in SAMPLE_PLACES])
+    query = {"type": type} if type else {}
+    return await db.tourist_places.find(query, {"_id": 0}).to_list(100)
+
+@api_router.get("/tourist-places/{place_id}")
+async def get_tourist_place_compat(request: Request, place_id: str):
+    await get_current_user(request)
+    place = await db.tourist_places.find_one({"place_id": place_id}, {"_id": 0})
     if not place:
         raise HTTPException(status_code=404, detail="Local turístico não encontrado")
-    
     return place
 
-@api_router.post("/bookings", response_model=Booking)
-async def create_booking(request: Request, booking_data: BookingCreate):
+@api_router.post("/bookings")
+async def create_booking_compat(request: Request, booking_data: dict):
     user_id = await get_current_user(request)
-    
-    place = await db.tourist_places.find_one({"place_id": booking_data.place_id}, {"_id": 0})
+    place = await db.tourist_places.find_one({"place_id": booking_data.get("place_id")}, {"_id": 0})
     if not place:
         raise HTTPException(status_code=404, detail="Local não encontrado")
-    
-    from datetime import datetime
-    check_in_date = datetime.fromisoformat(booking_data.check_in.replace('Z', '+00:00'))
-    check_out_date = datetime.fromisoformat(booking_data.check_out.replace('Z', '+00:00'))
+    check_in_date = datetime.fromisoformat(booking_data["check_in"].replace('Z', '+00:00'))
+    check_out_date = datetime.fromisoformat(booking_data["check_out"].replace('Z', '+00:00'))
     nights = (check_out_date - check_in_date).days
-    
     if nights <= 0:
         raise HTTPException(status_code=400, detail="Data de check-out deve ser posterior ao check-in")
-    
     total_price = place["price_per_night"] * nights
-    
     booking_id = f"booking_{uuid.uuid4().hex[:10]}"
-    
     booking_doc = {
-        "booking_id": booking_id,
-        "user_id": user_id,
-        "place_id": booking_data.place_id,
-        "place_name": place["name"],
-        "place_type": place["type"],
-        "check_in": booking_data.check_in,
-        "check_out": booking_data.check_out,
-        "guests": booking_data.guests,
-        "nights": nights,
-        "price_per_night": place["price_per_night"],
-        "total_price": total_price,
-        "payment_method": booking_data.payment_method,
-        "status": "confirmado",
-        "special_requests": booking_data.special_requests,
+        "booking_id": booking_id, "user_id": user_id,
+        "place_id": booking_data["place_id"], "place_name": place["name"],
+        "place_type": place["type"], "check_in": booking_data["check_in"],
+        "check_out": booking_data["check_out"], "guests": booking_data.get("guests", 1),
+        "nights": nights, "price_per_night": place["price_per_night"],
+        "total_price": total_price, "payment_method": booking_data.get("payment_method", "transferencia"),
+        "status": "pendente_pagamento", "payment_status": "pendente",
+        "special_requests": booking_data.get("special_requests"),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    
     await db.bookings.insert_one(booking_doc)
-    
-    return Booking(**booking_doc)
+    return {k: v for k, v in booking_doc.items() if k != "_id"}
 
-@api_router.get("/bookings", response_model=List[Booking])
-async def get_bookings(request: Request):
+@api_router.get("/bookings")
+async def get_bookings_compat(request: Request):
     user_id = await get_current_user(request)
-    
-    bookings = await db.bookings.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
-    
-    return bookings
+    return await db.bookings.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
 
-class Property(BaseModel):
-    property_id: str
-    type: str
-    transaction_type: str
-    title: str
-    description: str
-    price: float
-    location: str
-    bedrooms: Optional[int] = None
-    bathrooms: Optional[int] = None
-    area: float
-    images: List[str]
-    features: List[str]
-    owner_name: str
-    owner_phone: str
-    status: str
-
-class PropertyInquiryCreate(BaseModel):
-    property_id: str
-    message: str
-    phone: str
-
-class PropertyInquiry(BaseModel):
-    inquiry_id: str
-    user_id: str
-    property_id: str
-    property_title: str
-    property_price: float
-    message: str
-    phone: str
-    status: str
-    created_at: str
-
-@api_router.get("/properties", response_model=List[Property])
-async def get_properties(request: Request, type: Optional[str] = None, transaction: Optional[str] = None):
+@api_router.get("/properties")
+async def get_properties_compat(request: Request, type: Optional[str] = None, transaction: Optional[str] = None):
     await get_current_user(request)
-    
     count = await db.properties.count_documents({})
-    
     if count == 0:
-        sample_properties = [
-            {
-                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
-                "type": "apartamento",
-                "transaction_type": "venda",
-                "title": "Apartamento T3 Moderno na Talatona",
-                "description": "Apartamento luxuoso com 3 quartos, suite, varanda ampla e vista panorâmica. Condomínio fechado com segurança 24h.",
-                "price": 85000000.0,
-                "location": "Talatona, Luanda",
-                "bedrooms": 3,
-                "bathrooms": 2,
-                "area": 120.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?crop=entropy&cs=srgb&fm=jpg&q=85",
-                    "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "features": ["Ar Condicionado", "Varanda", "Garagem", "Piscina do Condomínio", "Segurança 24h"],
-                "owner_name": "Imobiliária Premium",
-                "owner_phone": "+244 923 456 789",
-                "status": "disponível"
-            },
-            {
-                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
-                "type": "casa",
-                "transaction_type": "aluguel",
-                "title": "Vivenda T4 com Piscina - Benfica",
-                "description": "Casa espaçosa com 4 quartos, piscina privada, jardim e churrasqueira. Ideal para famílias.",
-                "price": 350000.0,
-                "location": "Benfica, Luanda",
-                "bedrooms": 4,
-                "bathrooms": 3,
-                "area": 250.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1568605114967-8130f3a36994?crop=entropy&cs=srgb&fm=jpg&q=85",
-                    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "features": ["Piscina Privada", "Jardim", "Churrasqueira", "Garagem para 2 carros", "Portão Eletrônico"],
-                "owner_name": "António Silva",
-                "owner_phone": "+244 912 345 678",
-                "status": "disponível"
-            },
-            {
-                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
-                "type": "terreno",
-                "transaction_type": "venda",
-                "title": "Terreno 500m² - Urbanização Kikuxi",
-                "description": "Lote plano murado, pronto para construção. Infraestrutura completa (água, luz, esgoto).",
-                "price": 12000000.0,
-                "location": "Kikuxi, Talatona",
-                "bedrooms": None,
-                "bathrooms": None,
-                "area": 500.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1500382017468-9049fed747ef?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "features": ["Murado", "Documentação Regular", "Água", "Luz", "Esgoto"],
-                "owner_name": "Construtora Futuro",
-                "owner_phone": "+244 933 222 111",
-                "status": "disponível"
-            },
-            {
-                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
-                "type": "apartamento",
-                "transaction_type": "aluguel",
-                "title": "Apartamento T2 Mobilado - Ilha de Luanda",
-                "description": "Apartamento totalmente mobilado e equipado com vista para o mar. Inclui Internet fibra óptica.",
-                "price": 180000.0,
-                "location": "Ilha de Luanda",
-                "bedrooms": 2,
-                "bathrooms": 1,
-                "area": 80.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "features": ["Mobilado", "Vista Mar", "Internet Fibra", "Ar Condicionado", "Cozinha Equipada"],
-                "owner_name": "Maria Costa",
-                "owner_phone": "+244 924 567 890",
-                "status": "disponível"
-            },
-            {
-                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
-                "type": "comercial",
-                "transaction_type": "aluguel",
-                "title": "Escritório 150m² - Centro de Luanda",
-                "description": "Espaço comercial moderno em edifício corporativo. Recepção, 3 salas, copa e 2 WCs.",
-                "price": 280000.0,
-                "location": "Maianga, Centro de Luanda",
-                "bedrooms": None,
-                "bathrooms": 2,
-                "area": 150.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1497366216548-37526070297c?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "features": ["Ar Condicionado Central", "Internet", "Estacionamento", "Segurança", "Elevador"],
-                "owner_name": "Grupo Empresarial AOA",
-                "owner_phone": "+244 922 111 222",
-                "status": "disponível"
-            },
-            {
-                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
-                "type": "casa",
-                "transaction_type": "venda",
-                "title": "Vivenda de Luxo T5 - Luanda Sul",
-                "description": "Mansão com arquitetura contemporânea, piscina infinity, cinema privado e sistema domótica completo.",
-                "price": 250000000.0,
-                "location": "Luanda Sul",
-                "bedrooms": 5,
-                "bathrooms": 5,
-                "area": 450.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1613490493576-7fde63acd811?crop=entropy&cs=srgb&fm=jpg&q=85",
-                    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "features": ["Piscina Infinity", "Cinema Privado", "Domótica", "Garagem 4 carros", "Segurança 24h", "Gerador"],
-                "owner_name": "Premium Properties",
-                "owner_phone": "+244 923 999 888",
-                "status": "disponível"
-            },
-            {
-                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
-                "type": "apartamento",
-                "transaction_type": "venda",
-                "title": "Apartamento T1 Novo - Kilamba",
-                "description": "Apartamento novo nunca habitado, com acabamentos de qualidade. Pronto a habitar.",
-                "price": 28000000.0,
-                "location": "Kilamba Kiaxi",
-                "bedrooms": 1,
-                "bathrooms": 1,
-                "area": 55.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "features": ["Novo", "Elevador", "Estacionamento", "Varanda"],
-                "owner_name": "Construtora Kilamba",
-                "owner_phone": "+244 913 444 555",
-                "status": "disponível"
-            },
-            {
-                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
-                "type": "terreno",
-                "transaction_type": "venda",
-                "title": "Terreno 1000m² - Belas",
-                "description": "Grande lote em condomínio fechado de luxo. Localização privilegiada com vista.",
-                "price": 35000000.0,
-                "location": "Belas",
-                "bedrooms": None,
-                "bathrooms": None,
-                "area": 1000.0,
-                "images": [
-                    "https://images.unsplash.com/photo-1500382017468-9049fed747ef?crop=entropy&cs=srgb&fm=jpg&q=85"
-                ],
-                "features": ["Condomínio Fechado", "Vista Panorâmica", "Infraestrutura Completa", "Segurança"],
-                "owner_name": "Belas Residence",
-                "owner_phone": "+244 925 666 777",
-                "status": "disponível"
-            }
-        ]
-        
-        await db.properties.insert_many(sample_properties)
-        properties = sample_properties
-    else:
-        query = {}
-        if type:
-            query["type"] = type
-        if transaction:
-            query["transaction_type"] = transaction
-        properties = await db.properties.find(query, {"_id": 0}).to_list(100)
-    
-    return properties
+        from properties_router import SAMPLE_PROPERTIES
+        await db.properties.insert_many([{**p} for p in SAMPLE_PROPERTIES])
+    query = {}
+    if type: query["type"] = type
+    if transaction: query["transaction_type"] = transaction
+    return await db.properties.find(query, {"_id": 0}).to_list(100)
 
-@api_router.get("/properties/{property_id}", response_model=Property)
-async def get_property(request: Request, property_id: str):
+@api_router.get("/properties/{property_id}")
+async def get_property_compat(request: Request, property_id: str):
     await get_current_user(request)
-    
-    property_doc = await db.properties.find_one({"property_id": property_id}, {"_id": 0})
-    
-    if not property_doc:
+    prop = await db.properties.find_one({"property_id": property_id}, {"_id": 0})
+    if not prop:
         raise HTTPException(status_code=404, detail="Imóvel não encontrado")
-    
-    return property_doc
+    return prop
 
-@api_router.post("/property-inquiries", response_model=PropertyInquiry)
-async def create_property_inquiry(request: Request, inquiry_data: PropertyInquiryCreate):
+@api_router.post("/property-inquiries")
+async def create_inquiry_compat(request: Request, inquiry_data: dict):
     user_id = await get_current_user(request)
-    
-    property_doc = await db.properties.find_one({"property_id": inquiry_data.property_id}, {"_id": 0})
-    if not property_doc:
+    prop = await db.properties.find_one({"property_id": inquiry_data.get("property_id")}, {"_id": 0})
+    if not prop:
         raise HTTPException(status_code=404, detail="Imóvel não encontrado")
-    
     inquiry_id = f"inquiry_{uuid.uuid4().hex[:10]}"
-    
     inquiry_doc = {
-        "inquiry_id": inquiry_id,
-        "user_id": user_id,
-        "property_id": inquiry_data.property_id,
-        "property_title": property_doc["title"],
-        "property_price": property_doc["price"],
-        "message": inquiry_data.message,
-        "phone": inquiry_data.phone,
-        "status": "enviado",
+        "inquiry_id": inquiry_id, "user_id": user_id,
+        "property_id": inquiry_data["property_id"], "property_title": prop["title"],
+        "property_price": prop["price"], "message": inquiry_data.get("message", ""),
+        "phone": inquiry_data.get("phone", ""), "status": "enviado",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    
     await db.property_inquiries.insert_one(inquiry_doc)
-    
-    return PropertyInquiry(**inquiry_doc)
+    return {k: v for k, v in inquiry_doc.items() if k != "_id"}
 
-@api_router.get("/property-inquiries", response_model=List[PropertyInquiry])
-async def get_property_inquiries(request: Request):
+@api_router.get("/property-inquiries")
+async def get_inquiries_compat(request: Request):
     user_id = await get_current_user(request)
-    
-    inquiries = await db.property_inquiries.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
-    
-    return inquiries
+    return await db.property_inquiries.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
 
 @api_router.get("/fiscal/iva-calculate")
 async def fiscal_iva_calculate(request: Request, amount: float, rate_type: str = "normal"):

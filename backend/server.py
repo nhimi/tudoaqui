@@ -824,7 +824,16 @@ async def create_order(request: Request, order_data: OrderCreate):
     
     subtotal = sum(item.price * item.quantity for item in order_data.items)
     delivery_fee = restaurant["delivery_fee"]
-    total = subtotal + delivery_fee
+    
+    # Check IVA settings
+    config = await db.system_config.find_one({"config_id": "main"}, {"_id": 0})
+    iva_settings = config.get("iva_settings", {"enabled": False, "rate": 14.0}) if config else {"enabled": False, "rate": 14.0}
+    
+    iva_amount = 0
+    if iva_settings.get("enabled"):
+        iva_amount = round(subtotal * (iva_settings["rate"] / 100), 2)
+    
+    total = subtotal + delivery_fee + iva_amount
     
     order_id = f"order_{uuid.uuid4().hex[:10]}"
     
@@ -836,6 +845,8 @@ async def create_order(request: Request, order_data: OrderCreate):
         "items": [item.model_dump() for item in order_data.items],
         "subtotal": subtotal,
         "delivery_fee": delivery_fee,
+        "iva_amount": iva_amount,
+        "iva_rate": iva_settings["rate"] if iva_settings.get("enabled") else 0,
         "total": total,
         "delivery_address": order_data.delivery_address,
         "payment_method": order_data.payment_method,

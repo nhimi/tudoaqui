@@ -214,7 +214,7 @@ function AppRouter() {
         path="/profile"
         element={
           <ProtectedRoute>
-            <Profile user={user} />
+            <Profile />
           </ProtectedRoute>
         }
       />

@@ -766,6 +766,261 @@ async def get_bookings(request: Request):
     
     return bookings
 
+class Property(BaseModel):
+    property_id: str
+    type: str
+    transaction_type: str
+    title: str
+    description: str
+    price: float
+    location: str
+    bedrooms: Optional[int] = None
+    bathrooms: Optional[int] = None
+    area: float
+    images: List[str]
+    features: List[str]
+    owner_name: str
+    owner_phone: str
+    status: str
+
+class PropertyInquiryCreate(BaseModel):
+    property_id: str
+    message: str
+    phone: str
+
+class PropertyInquiry(BaseModel):
+    inquiry_id: str
+    user_id: str
+    property_id: str
+    property_title: str
+    property_price: float
+    message: str
+    phone: str
+    status: str
+    created_at: str
+
+@api_router.get("/properties", response_model=List[Property])
+async def get_properties(request: Request, type: Optional[str] = None, transaction: Optional[str] = None):
+    await get_current_user(request)
+    
+    count = await db.properties.count_documents({})
+    
+    if count == 0:
+        sample_properties = [
+            {
+                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
+                "type": "apartamento",
+                "transaction_type": "venda",
+                "title": "Apartamento T3 Moderno na Talatona",
+                "description": "Apartamento luxuoso com 3 quartos, suite, varanda ampla e vista panorâmica. Condomínio fechado com segurança 24h.",
+                "price": 85000000.0,
+                "location": "Talatona, Luanda",
+                "bedrooms": 3,
+                "bathrooms": 2,
+                "area": 120.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?crop=entropy&cs=srgb&fm=jpg&q=85",
+                    "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "features": ["Ar Condicionado", "Varanda", "Garagem", "Piscina do Condomínio", "Segurança 24h"],
+                "owner_name": "Imobiliária Premium",
+                "owner_phone": "+244 923 456 789",
+                "status": "disponível"
+            },
+            {
+                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
+                "type": "casa",
+                "transaction_type": "aluguel",
+                "title": "Vivenda T4 com Piscina - Benfica",
+                "description": "Casa espaçosa com 4 quartos, piscina privada, jardim e churrasqueira. Ideal para famílias.",
+                "price": 350000.0,
+                "location": "Benfica, Luanda",
+                "bedrooms": 4,
+                "bathrooms": 3,
+                "area": 250.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1568605114967-8130f3a36994?crop=entropy&cs=srgb&fm=jpg&q=85",
+                    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "features": ["Piscina Privada", "Jardim", "Churrasqueira", "Garagem para 2 carros", "Portão Eletrônico"],
+                "owner_name": "António Silva",
+                "owner_phone": "+244 912 345 678",
+                "status": "disponível"
+            },
+            {
+                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
+                "type": "terreno",
+                "transaction_type": "venda",
+                "title": "Terreno 500m² - Urbanização Kikuxi",
+                "description": "Lote plano murado, pronto para construção. Infraestrutura completa (água, luz, esgoto).",
+                "price": 12000000.0,
+                "location": "Kikuxi, Talatona",
+                "bedrooms": None,
+                "bathrooms": None,
+                "area": 500.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1500382017468-9049fed747ef?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "features": ["Murado", "Documentação Regular", "Água", "Luz", "Esgoto"],
+                "owner_name": "Construtora Futuro",
+                "owner_phone": "+244 933 222 111",
+                "status": "disponível"
+            },
+            {
+                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
+                "type": "apartamento",
+                "transaction_type": "aluguel",
+                "title": "Apartamento T2 Mobilado - Ilha de Luanda",
+                "description": "Apartamento totalmente mobilado e equipado com vista para o mar. Inclui Internet fibra óptica.",
+                "price": 180000.0,
+                "location": "Ilha de Luanda",
+                "bedrooms": 2,
+                "bathrooms": 1,
+                "area": 80.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "features": ["Mobilado", "Vista Mar", "Internet Fibra", "Ar Condicionado", "Cozinha Equipada"],
+                "owner_name": "Maria Costa",
+                "owner_phone": "+244 924 567 890",
+                "status": "disponível"
+            },
+            {
+                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
+                "type": "comercial",
+                "transaction_type": "aluguel",
+                "title": "Escritório 150m² - Centro de Luanda",
+                "description": "Espaço comercial moderno em edifício corporativo. Recepção, 3 salas, copa e 2 WCs.",
+                "price": 280000.0,
+                "location": "Maianga, Centro de Luanda",
+                "bedrooms": None,
+                "bathrooms": 2,
+                "area": 150.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1497366216548-37526070297c?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "features": ["Ar Condicionado Central", "Internet", "Estacionamento", "Segurança", "Elevador"],
+                "owner_name": "Grupo Empresarial AOA",
+                "owner_phone": "+244 922 111 222",
+                "status": "disponível"
+            },
+            {
+                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
+                "type": "casa",
+                "transaction_type": "venda",
+                "title": "Vivenda de Luxo T5 - Luanda Sul",
+                "description": "Mansão com arquitetura contemporânea, piscina infinity, cinema privado e sistema domótica completo.",
+                "price": 250000000.0,
+                "location": "Luanda Sul",
+                "bedrooms": 5,
+                "bathrooms": 5,
+                "area": 450.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1613490493576-7fde63acd811?crop=entropy&cs=srgb&fm=jpg&q=85",
+                    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "features": ["Piscina Infinity", "Cinema Privado", "Domótica", "Garagem 4 carros", "Segurança 24h", "Gerador"],
+                "owner_name": "Premium Properties",
+                "owner_phone": "+244 923 999 888",
+                "status": "disponível"
+            },
+            {
+                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
+                "type": "apartamento",
+                "transaction_type": "venda",
+                "title": "Apartamento T1 Novo - Kilamba",
+                "description": "Apartamento novo nunca habitado, com acabamentos de qualidade. Pronto a habitar.",
+                "price": 28000000.0,
+                "location": "Kilamba Kiaxi",
+                "bedrooms": 1,
+                "bathrooms": 1,
+                "area": 55.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "features": ["Novo", "Elevador", "Estacionamento", "Varanda"],
+                "owner_name": "Construtora Kilamba",
+                "owner_phone": "+244 913 444 555",
+                "status": "disponível"
+            },
+            {
+                "property_id": f"prop_{uuid.uuid4().hex[:8]}",
+                "type": "terreno",
+                "transaction_type": "venda",
+                "title": "Terreno 1000m² - Belas",
+                "description": "Grande lote em condomínio fechado de luxo. Localização privilegiada com vista.",
+                "price": 35000000.0,
+                "location": "Belas",
+                "bedrooms": None,
+                "bathrooms": None,
+                "area": 1000.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1500382017468-9049fed747ef?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "features": ["Condomínio Fechado", "Vista Panorâmica", "Infraestrutura Completa", "Segurança"],
+                "owner_name": "Belas Residence",
+                "owner_phone": "+244 925 666 777",
+                "status": "disponível"
+            }
+        ]
+        
+        await db.properties.insert_many(sample_properties)
+        properties = sample_properties
+    else:
+        query = {}
+        if type:
+            query["type"] = type
+        if transaction:
+            query["transaction_type"] = transaction
+        properties = await db.properties.find(query, {"_id": 0}).to_list(100)
+    
+    return properties
+
+@api_router.get("/properties/{property_id}", response_model=Property)
+async def get_property(request: Request, property_id: str):
+    await get_current_user(request)
+    
+    property_doc = await db.properties.find_one({"property_id": property_id}, {"_id": 0})
+    
+    if not property_doc:
+        raise HTTPException(status_code=404, detail="Imóvel não encontrado")
+    
+    return property_doc
+
+@api_router.post("/property-inquiries", response_model=PropertyInquiry)
+async def create_property_inquiry(request: Request, inquiry_data: PropertyInquiryCreate):
+    user_id = await get_current_user(request)
+    
+    property_doc = await db.properties.find_one({"property_id": inquiry_data.property_id}, {"_id": 0})
+    if not property_doc:
+        raise HTTPException(status_code=404, detail="Imóvel não encontrado")
+    
+    inquiry_id = f"inquiry_{uuid.uuid4().hex[:10]}"
+    
+    inquiry_doc = {
+        "inquiry_id": inquiry_id,
+        "user_id": user_id,
+        "property_id": inquiry_data.property_id,
+        "property_title": property_doc["title"],
+        "property_price": property_doc["price"],
+        "message": inquiry_data.message,
+        "phone": inquiry_data.phone,
+        "status": "enviado",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.property_inquiries.insert_one(inquiry_doc)
+    
+    return PropertyInquiry(**inquiry_doc)
+
+@api_router.get("/property-inquiries", response_model=List[PropertyInquiry])
+async def get_property_inquiries(request: Request):
+    user_id = await get_current_user(request)
+    
+    inquiries = await db.property_inquiries.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    
+    return inquiries
+
 app.include_router(api_router)
 
 app.add_middleware(

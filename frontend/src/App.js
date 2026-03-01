@@ -6,7 +6,7 @@ import { AuthCallback } from './components/AuthCallback';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Taxi from './pages/Taxi';
+import TaxiNew from './pages/TaxiNew';
 import Restaurants from './pages/Restaurants';
 import RestaurantMenu from './pages/RestaurantMenu';
 import Checkout from './pages/Checkout';

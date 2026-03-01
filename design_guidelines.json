@@ -1,0 +1,165 @@
+{
+  "brand_identity": {
+    "name": "Kandengue Marketplace",
+    "design_system": "Kizomba UI",
+    "ethos": "Organized Chaos. Vibrant, energetic, trustworthy, and distinctly Angolan.",
+    "core_values": ["Speed (Mokina)", "Trust (Confiança)", "Vibrancy (Alegria)"],
+    "emotional_tone": "Energetic but reliable. Like a busy Luanda market that always has what you need."
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Syne, sans-serif",
+      "weights": ["700", "800"],
+      "usage": "Use for H1, H2, and major callouts. Tight tracking (-0.02em).",
+      "fallback": "Outfit, sans-serif"
+    },
+    "body": {
+      "font_family": "Manrope, sans-serif",
+      "weights": ["400", "500", "600"],
+      "usage": "Use for all paragraph text, labels, and inputs. Normal tracking.",
+      "fallback": "Plus Jakarta Sans, sans-serif"
+    },
+    "mono": {
+      "font_family": "JetBrains Mono, monospace",
+      "usage": "Use for transaction IDs, price breakdowns, and code snippets."
+    }
+  },
+  "colors": {
+    "primary": {
+      "name": "Angola Red",
+      "hex": "#D62828",
+      "tailwind": "bg-[#D62828] text-white",
+      "usage": "Primary buttons, sale tags, urgent notifications, active states."
+    },
+    "secondary": {
+      "name": "Kizomba Yellow",
+      "hex": "#FCBF49",
+      "tailwind": "bg-[#FCBF49] text-black",
+      "usage": "Highlights, secondary buttons, 'star' ratings, accent icons."
+    },
+    "accent": {
+      "name": "Luanda Night",
+      "hex": "#1A1A1A",
+      "tailwind": "bg-[#1A1A1A] text-white",
+      "usage": "Footer, dark mode backgrounds, strong headings, borders."
+    },
+    "background": {
+      "light": "#F7F5F0",
+      "dark": "#0A0A0A",
+      "paper": "#FFFFFF"
+    },
+    "status": {
+      "success": "#2A9D8F",
+      "warning": "#F4A261",
+      "error": "#E63946"
+    }
+  },
+  "visual_enhancers": {
+    "radius": "rounded-lg",
+    "shadows": {
+      "card": "shadow-[0_4px_12px_rgba(0,0,0,0.08)]",
+      "floating": "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
+      "button": "shadow-[0_2px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:shadow-none"
+    },
+    "patterns": {
+      "noise": "bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20",
+      "dots": "bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"
+    },
+    "gradients": {
+      "hero": "bg-gradient-to-br from-[#F7F5F0] via-[#F7F5F0] to-[#FCBF49]/20",
+      "card_hover": "hover:bg-gradient-to-br hover:from-white hover:to-[#F7F5F0]"
+    }
+  },
+  "layout_strategies": {
+    "mobile_container": "max-w-md mx-auto min-h-screen bg-background shadow-2xl overflow-hidden relative",
+    "bento_grid": "grid grid-cols-2 gap-4 p-4",
+    "section_spacing": "py-8 px-6",
+    "safe_area": "pb-24"
+  },
+  "components": {
+    "Button": {
+      "base": "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+      "variants": {
+        "default": "bg-[#D62828] text-white hover:bg-[#D62828]/90 shadow-sm",
+        "secondary": "bg-[#FCBF49] text-black hover:bg-[#FCBF49]/90",
+        "outline": "border border-[#1A1A1A] bg-transparent hover:bg-[#1A1A1A]/5 text-[#1A1A1A]",
+        "ghost": "hover:bg-accent hover:text-accent-foreground"
+      }
+    },
+    "Card": {
+      "base": "rounded-xl border border-black/5 bg-white text-card-foreground shadow-sm hover:shadow-md transition-shadow duration-200",
+      "interactive": "cursor-pointer hover:-translate-y-1 transition-transform duration-200"
+    },
+    "Input": {
+      "base": "flex h-12 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D62828] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    }
+  },
+  "image_urls": {
+    "hero": [
+      {
+        "url": "https://images.unsplash.com/photo-1562859422-29f5c0f4b24d?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Luanda Modern Skyline",
+        "category": "hero_background"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1743172140481-5c7044dd23d6?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Luanda Cityscape",
+        "category": "hero_background_secondary"
+      }
+    ],
+    "taxi": [
+      {
+        "url": "https://images.unsplash.com/photo-1708347456816-db9d5d7efe3b?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Taxi Driver in Red Car",
+        "category": "taxi_driver"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1620286905186-22bdb4cd469c?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Passenger in Taxi",
+        "category": "taxi_passenger"
+      }
+    ],
+    "food": [
+      {
+        "url": "https://images.unsplash.com/photo-1734866689982-2afd07eb149a?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Community Market Food",
+        "category": "food_market"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1582308281127-44c931038160?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Local Vendor",
+        "category": "food_vendor"
+      }
+    ],
+    "maps": [
+      {
+        "url": "https://images.unsplash.com/photo-1724131138554-810b877451b3?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "City Map View",
+        "category": "map_placeholder"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "1. MOBILE-FIRST: Build the entire layout assuming a mobile device. Use 'max-w-md mx-auto' on the main container to simulate a phone screen on desktop.",
+    "2. ANGOLAN VIBE: Use the Red/Yellow/Black palette boldly. Do not revert to blue/gray SaaS defaults.",
+    "3. TAXI MODULE: Implement a 'Comparison Card' that shows price differences between providers (e.g., 'Yango', 'Heetch', 'Ugo'). Use the 'map_placeholder' image as a background for the tracking screen.",
+    "4. FOOD MODULE: Use horizontal scrolling lists for 'Categories' and vertical lists for 'Restaurants'.",
+    "5. AUTHENTICATION: Create a clean login screen with Google OAuth button and Email/Password fields. Use the Luanda Skyline as a subtle background.",
+    "6. PAYMENTS: Add visual toggles/radios for 'Multicaixa Express', 'Unitel Money', and 'BAI Paga'.",
+    "7. NAVIGATION: Use a fixed bottom navigation bar with icons for Home, Rides, Food, Wallet, Profile.",
+    "8. ANIMATIONS: Use 'framer-motion' for page transitions and button taps. Slide-in from bottom for modals."
+  ],
+  "universal_guidelines": [
+    "You tend to converge toward generic, 'on distribution' outputs. Avoid this.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all.",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; }",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions.",
+    "Use 2-3x more spacing than feels comfortable."
+  ]
+}

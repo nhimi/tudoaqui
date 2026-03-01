@@ -14,6 +14,9 @@ import Orders from './pages/Orders';
 import Tourism from './pages/Tourism';
 import PlaceDetail from './pages/PlaceDetail';
 import Bookings from './pages/Bookings';
+import Properties from './pages/Properties';
+import PropertyDetail from './pages/PropertyDetail';
+import Inquiries from './pages/Inquiries';
 import Profile from './pages/Profile';
 import '@/App.css';
 

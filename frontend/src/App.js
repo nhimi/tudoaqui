@@ -172,6 +172,15 @@ function AppRouter() {
       />
       
       <Route
+        path="/accounting/new-entry"
+        element={
+          <ProtectedRoute>
+            <JournalEntryForm />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
         path="/profile"
         element={
           <ProtectedRoute>

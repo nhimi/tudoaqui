@@ -535,6 +535,237 @@ async def get_orders(request: Request):
     
     return orders
 
+class TouristPlace(BaseModel):
+    place_id: str
+    name: str
+    type: str
+    description: str
+    location: str
+    price_per_night: float
+    images: List[str]
+    rating: float
+    amenities: List[str]
+    capacity: int
+
+class BookingCreate(BaseModel):
+    place_id: str
+    check_in: str
+    check_out: str
+    guests: int
+    payment_method: str
+    special_requests: Optional[str] = None
+
+class Booking(BaseModel):
+    booking_id: str
+    user_id: str
+    place_id: str
+    place_name: str
+    place_type: str
+    check_in: str
+    check_out: str
+    guests: int
+    nights: int
+    price_per_night: float
+    total_price: float
+    payment_method: str
+    status: str
+    special_requests: Optional[str] = None
+    created_at: str
+
+@api_router.get("/tourist-places", response_model=List[TouristPlace])
+async def get_tourist_places(request: Request, type: Optional[str] = None):
+    await get_current_user(request)
+    
+    count = await db.tourist_places.count_documents({})
+    
+    if count == 0:
+        sample_places = [
+            {
+                "place_id": f"place_{uuid.uuid4().hex[:8]}",
+                "name": "Hotel Epic Sana Luanda",
+                "type": "hotel",
+                "description": "Hotel de luxo com vista para a Baía de Luanda, piscina infinity e spa completo",
+                "location": "Ilha de Luanda, Luanda",
+                "price_per_night": 25000.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1566073771259-6a8506099945?crop=entropy&cs=srgb&fm=jpg&q=85",
+                    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "rating": 4.8,
+                "amenities": ["Wi-Fi", "Piscina", "Spa", "Restaurante", "Bar", "Academia"],
+                "capacity": 2
+            },
+            {
+                "place_id": f"place_{uuid.uuid4().hex[:8]}",
+                "name": "Resort Kwanza Lodge",
+                "type": "resort",
+                "description": "Resort ecológico às margens do Rio Kwanza com safaris e atividades aquáticas",
+                "location": "Rio Kwanza, Bengo",
+                "price_per_night": 18000.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?crop=entropy&cs=srgb&fm=jpg&q=85",
+                    "https://images.unsplash.com/photo-1571896349842-33c89424de2d?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "rating": 4.6,
+                "amenities": ["Safari", "Pesca", "Piscina", "Restaurante", "Wi-Fi", "Passeios de Barco"],
+                "capacity": 4
+            },
+            {
+                "place_id": f"place_{uuid.uuid4().hex[:8]}",
+                "name": "Museu Nacional de Antropologia",
+                "type": "museu",
+                "description": "Acervo rico sobre a história e cultura dos povos de Angola",
+                "location": "Luanda",
+                "price_per_night": 500.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "rating": 4.4,
+                "amenities": ["Guia Turístico", "Audioguia", "Café", "Loja de Souvenirs"],
+                "capacity": 50
+            },
+            {
+                "place_id": f"place_{uuid.uuid4().hex[:8]}",
+                "name": "Parque Nacional da Kissama",
+                "type": "parque",
+                "description": "Santuário de vida selvagem com elefantes, girafas e outras espécies africanas",
+                "location": "Kissama, Bengo",
+                "price_per_night": 1200.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1516426122078-c23e76319801?crop=entropy&cs=srgb&fm=jpg&q=85",
+                    "https://images.unsplash.com/photo-1535338623859-02b29c1686e7?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "rating": 4.7,
+                "amenities": ["Safari Guiado", "Camping", "Observação de Animais", "Trilhas"],
+                "capacity": 10
+            },
+            {
+                "place_id": f"place_{uuid.uuid4().hex[:8]}",
+                "name": "Fortaleza de São Miguel",
+                "type": "atrativo",
+                "description": "Fortaleza histórica portuguesa construída em 1576, agora Museu das Forças Armadas",
+                "location": "Luanda",
+                "price_per_night": 300.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "rating": 4.5,
+                "amenities": ["Visita Guiada", "Museu", "Vista Panorâmica", "Fotografia"],
+                "capacity": 100
+            },
+            {
+                "place_id": f"place_{uuid.uuid4().hex[:8]}",
+                "name": "Miradouro da Lua",
+                "type": "atrativo",
+                "description": "Formações rochosas espetaculares que lembram a superfície lunar",
+                "location": "Bengo",
+                "price_per_night": 200.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "rating": 4.9,
+                "amenities": ["Mirante", "Trilhas", "Piquenique", "Fotografia"],
+                "capacity": 50
+            },
+            {
+                "place_id": f"place_{uuid.uuid4().hex[:8]}",
+                "name": "Pousada Lua de Mel",
+                "type": "hotel",
+                "description": "Acomodação romântica com vista para o oceano Atlântico",
+                "location": "Cabo Ledo, Bengo",
+                "price_per_night": 15000.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "rating": 4.7,
+                "amenities": ["Praia Privada", "Restaurante", "Wi-Fi", "Spa"],
+                "capacity": 2
+            },
+            {
+                "place_id": f"place_{uuid.uuid4().hex[:8]}",
+                "name": "Cataratas de Kalandula",
+                "type": "atrativo",
+                "description": "Uma das maiores quedas d'água de África com 105 metros de altura",
+                "location": "Malanje",
+                "price_per_night": 800.0,
+                "images": [
+                    "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?crop=entropy&cs=srgb&fm=jpg&q=85"
+                ],
+                "rating": 5.0,
+                "amenities": ["Vista Panorâmica", "Trilhas", "Piquenique", "Guia Local"],
+                "capacity": 30
+            }
+        ]
+        
+        await db.tourist_places.insert_many(sample_places)
+        places = sample_places
+    else:
+        query = {"type": type} if type else {}
+        places = await db.tourist_places.find(query, {"_id": 0}).to_list(100)
+    
+    return places
+
+@api_router.get("/tourist-places/{place_id}", response_model=TouristPlace)
+async def get_tourist_place(request: Request, place_id: str):
+    await get_current_user(request)
+    
+    place = await db.tourist_places.find_one({"place_id": place_id}, {"_id": 0})
+    
+    if not place:
+        raise HTTPException(status_code=404, detail="Local turístico não encontrado")
+    
+    return place
+
+@api_router.post("/bookings", response_model=Booking)
+async def create_booking(request: Request, booking_data: BookingCreate):
+    user_id = await get_current_user(request)
+    
+    place = await db.tourist_places.find_one({"place_id": booking_data.place_id}, {"_id": 0})
+    if not place:
+        raise HTTPException(status_code=404, detail="Local não encontrado")
+    
+    from datetime import datetime
+    check_in_date = datetime.fromisoformat(booking_data.check_in.replace('Z', '+00:00'))
+    check_out_date = datetime.fromisoformat(booking_data.check_out.replace('Z', '+00:00'))
+    nights = (check_out_date - check_in_date).days
+    
+    if nights <= 0:
+        raise HTTPException(status_code=400, detail="Data de check-out deve ser posterior ao check-in")
+    
+    total_price = place["price_per_night"] * nights
+    
+    booking_id = f"booking_{uuid.uuid4().hex[:10]}"
+    
+    booking_doc = {
+        "booking_id": booking_id,
+        "user_id": user_id,
+        "place_id": booking_data.place_id,
+        "place_name": place["name"],
+        "place_type": place["type"],
+        "check_in": booking_data.check_in,
+        "check_out": booking_data.check_out,
+        "guests": booking_data.guests,
+        "nights": nights,
+        "price_per_night": place["price_per_night"],
+        "total_price": total_price,
+        "payment_method": booking_data.payment_method,
+        "status": "confirmado",
+        "special_requests": booking_data.special_requests,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.bookings.insert_one(booking_doc)
+    
+    return Booking(**booking_doc)
+
+@api_router.get("/bookings", response_model=List[Booking])
+async def get_bookings(request: Request):
+    user_id = await get_current_user(request)
+    
+    bookings = await db.bookings.find({"user_id": user_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    
+    return bookings
+
 app.include_router(api_router)
 
 app.add_middleware(

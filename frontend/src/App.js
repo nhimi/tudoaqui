@@ -84,6 +84,33 @@ function AppRouter() {
       />
       
       <Route
+        path="/tourism"
+        element={
+          <ProtectedRoute>
+            <Tourism />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/tourism/:placeId"
+        element={
+          <ProtectedRoute>
+            <PlaceDetail />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/bookings"
+        element={
+          <ProtectedRoute>
+            <Bookings />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
         path="/profile"
         element={
           <ProtectedRoute>

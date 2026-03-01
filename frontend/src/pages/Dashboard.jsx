@@ -87,7 +87,7 @@ export default function Dashboard({ user }) {
           <Card className="p-6 bg-gradient-to-br from-[#FCBF49] to-[#FCBF49]/80 border-none rounded-2xl text-[#1A1A1A]">
             <h3 className="font-bold text-lg mb-2">Promoção Especial!</h3>
             <p className="text-sm mb-4 opacity-90">
-              Primeira corrida com 20% de desconto. Use o código <span className="font-bold">KANDENGUE20</span>
+              Primeira corrida com 20% de desconto. Use o código <span className="font-bold">TUDOAQUI20</span>
             </p>
             <Button 
               data-testid="promo-cta-btn"
@@ -95,6 +95,20 @@ export default function Dashboard({ user }) {
               className="bg-[#1A1A1A] hover:bg-[#1A1A1A]/90 text-white font-semibold h-10 rounded-lg"
             >
               Solicitar Agora
+            </Button>
+          </Card>
+
+          <Card className="p-6 bg-gradient-to-br from-[#9333EA] to-[#9333EA]/80 border-none rounded-2xl text-white mt-4">
+            <h3 className="font-bold text-lg mb-2">Tem um Negócio?</h3>
+            <p className="text-sm mb-4 opacity-90">
+              Torne-se parceiro TudoAqui e alcance milhares de clientes em Angola
+            </p>
+            <Button 
+              data-testid="become-partner-btn"
+              onClick={() => navigate('/partner/register')}
+              className="bg-white text-[#9333EA] hover:bg-white/90 font-semibold h-10 rounded-lg"
+            >
+              Tornar-se Parceiro
             </Button>
           </Card>
         </div>

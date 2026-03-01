@@ -719,6 +719,11 @@ class AngolaMarketplaceAPITester:
             self.test_get_tourist_place_detail,
             self.test_create_booking,
             self.test_get_bookings,
+            self.test_get_properties,
+            self.test_get_properties_filtered,
+            self.test_get_property_detail,
+            self.test_create_property_inquiry,
+            self.test_get_property_inquiries,
             self.test_logout
         ]
         

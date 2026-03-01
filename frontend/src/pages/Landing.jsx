@@ -51,9 +51,10 @@ export default function Landing() {
         <div className="relative z-10 px-6 pt-16 pb-32">
           <div className="text-center mb-16">
             <h1 className="text-5xl sm:text-6xl font-bold text-white mb-4 tracking-tight">
-              Kandengue
+              TudoAqui
             </h1>
             <p className="text-xl text-white/90 font-medium">Tudo que precisa, num só lugar</p>
+            <p className="text-sm text-white/70 mt-2">Desenvolvido por Sincesoft-Sinceridade Service</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-12">

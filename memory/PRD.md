@@ -9,15 +9,16 @@ Comprehensive marketplace for Angola called **TudoAqui** by **Sincesoft-Sincerid
 - **Database**: MongoDB
 
 ### Backend Modules
-| Module | File | Description |
-|--------|------|-------------|
-| Core | `server.py` | Auth, restaurants, orders, reviews, fiscal, taxi, backward compat |
-| Admin | `admin_module.py` | Roles (CEO/Admin/Suporte/Finanças), config, user management |
-| Partners | `partners_module.py` | B2B system, tiers, analytics, bank details |
+| Module | File | Features |
+|--------|------|----------|
+| Core | `server.py` | Auth, restaurants, orders, reviews, fiscal, taxi, IVA in orders |
+| Admin | `admin_module.py` | Roles, config, user mgmt, doc review, IVA toggle, reports |
+| Partners | `partners_module.py` | Tiers, analytics, bank details, document upload, menu CRUD, incoming orders |
 | Payments | `payments_module.py` | Bank transfer with confirmation codes |
-| Accounting | `accounting_module.py` | PGCA accounting (journal, balance sheet) |
-| Fiscal | `fiscal_compliance.py` | Angolan taxes (IVA 14%) |
+| Accounting | `accounting_module.py` | PGCA (journal, balance sheet) |
+| Fiscal | `fiscal_compliance.py` | IVA 14%, retention, NIF validation |
 | Notifications | `notifications_module.py` | In-app notifications |
+| Referral | `referral_module.py` | Unique codes, rewards, coupons |
 | Tourism | `tourism_router.py` | Tourist places and bookings |
 | Properties | `properties_router.py` | Real estate listings |
 
@@ -26,42 +27,37 @@ Comprehensive marketplace for Angola called **TudoAqui** by **Sincesoft-Sincerid
 - **Users**: Normal, Premium
 - **Partners**: Básico, Premium, Enterprise
 
-## Implemented Features
+## Implemented Features (Feb 2026)
 - [x] Auth (email/password + Google OAuth)
-- [x] Dashboard with notification bell + admin link
-- [x] Taxi: vehicle types (standard/comfort/premium), ride request, driver assignment, navigation
+- [x] Dashboard with notifications, admin link, referral link
+- [x] Taxi: vehicle types, ride request, driver assignment, navigation GPS
 - [x] Restaurant: search, filters, menu, cart, checkout, reviews/ratings
 - [x] Tourism: listings, detail, bookings
 - [x] Real Estate: listings, detail, inquiries
-- [x] Payment system: bank transfer with confirmation codes (direct to partner)
+- [x] Payment: bank transfer with confirmation codes (direct to partner)
 - [x] Order tracking with status steps
-- [x] Partner system: tiers, analytics dashboard, bank details, wallet
-- [x] Accounting: PGCA chart, journal entries, trial balance, balance sheet
+- [x] Partner: tiers, analytics, bank details, wallet
+- [x] **Partner Menu Management** - CRUD menu items, auto-create restaurant
+- [x] **Partner Incoming Orders** - Status flow + customer notifications
+- [x] **Document Verification** - Upload BI/NIF/Alvará (base64), admin review
+- [x] **IVA Optional** - Toggle (14%) in admin, applied to orders
+- [x] **Sales Reports** - Period filter (day/week/month), IVA calculation
+- [x] **Referral System** - TUDO codes, 500Kz referrer, 20% referred, coupons
+- [x] Accounting: PGCA chart, journal entries, trial balance
 - [x] Fiscal: IVA calc, retention, NIF validation
-- [x] Admin dashboard: system config, API management, contacts, about, users/roles
-- [x] Notifications: in-app, read/unread, mark all read
-- [x] User tier management (normal/premium)
+- [x] Admin: config, APIs, contacts, about, users/roles
+- [x] Notifications: in-app, read/unread
 
-## Simulated Features
-- Driver assignment (random names)
-- Bank accounts (example IBAN/NIF)
-- External app integrations (Yango, Heetch, Tupuca)
+## Simulated
+- Driver assignment (random names), Bank accounts (example IBAN/NIF)
 
 ## Backlog
-### P0
-- [ ] Integrate IVA into actual order transactions
-- [ ] Full system audit
-
 ### P1
 - [ ] Real payment gateway APIs (Multicaixa, Unitelmoney, BAI Paga)
-- [ ] Partner document verification workflow
-- [ ] Partner-managed menus and orders
+- [ ] PDF/CSV report export (data available, need formatter)
+- [ ] WebSocket real-time order tracking
 
 ### P2
-- [ ] Real-time order tracking (WebSocket)
 - [ ] Push notifications
-- [ ] Coupon/discount system
-
-### P3
-- [ ] External app API integrations
-- [ ] Advanced reporting/export
+- [ ] Advanced coupon system (expiry, min order)
+- [ ] Partner ratings and featured listings

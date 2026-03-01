@@ -405,12 +405,20 @@ async def get_me(request: Request):
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Check if user is a partner
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    
     return {
         "user_id": user_doc["user_id"],
         "email": user_doc["email"],
         "name": user_doc["name"],
         "picture": user_doc.get("picture"),
-        "phone": user_doc.get("phone")
+        "phone": user_doc.get("phone"),
+        "user_tier": user_doc.get("user_tier", "normal"),
+        "admin_role": user_doc.get("admin_role"),
+        "is_partner": partner is not None,
+        "partner_id": partner.get("partner_id") if partner else None,
+        "partner_tier": partner.get("tier") if partner else None
     }
 
 @api_router.post("/auth/logout")

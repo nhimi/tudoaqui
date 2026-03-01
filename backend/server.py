@@ -53,6 +53,58 @@ class User(BaseModel):
     phone: Optional[str] = None
     created_at: str
 
+class UserTier(BaseModel):
+    tier: str  # normal, premium
+    benefits: List[str]
+    price: float
+
+class Partner(BaseModel):
+    partner_id: str
+    user_id: str
+    business_name: str
+    business_type: str  # taxi, restaurant, tourism, real_estate
+    tier: str  # basico, premium, enterprise
+    status: str  # pending, active, suspended
+    wallet_balance: float
+    total_revenue: float
+    commission_rate: float
+    created_at: str
+
+class PartnerWallet(BaseModel):
+    wallet_id: str
+    partner_id: str
+    balance: float
+    credit_limit: float
+    payment_methods: List[str]
+
+class Transaction(BaseModel):
+    transaction_id: str
+    partner_id: str
+    type: str  # credit, debit, commission, payout
+    amount: float
+    description: str
+    status: str
+    created_at: str
+
+class ServiceListing(BaseModel):
+    listing_id: str
+    partner_id: str
+    service_type: str
+    title: str
+    description: str
+    price: float
+    status: str  # active, inactive, pending
+    created_at: str
+
+class AccountingRecord(BaseModel):
+    record_id: str
+    partner_id: str
+    period: str
+    total_revenue: float
+    commission: float
+    net_amount: float
+    status: str
+
 class SessionData(BaseModel):
     session_id: str
 

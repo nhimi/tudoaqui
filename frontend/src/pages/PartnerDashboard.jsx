@@ -180,13 +180,23 @@ export default function PartnerDashboard() {
             {/* Quick Actions */}
             <Card className="p-6 bg-white border-black/5 rounded-xl shadow-sm">
               <h3 className="font-bold text-[#1A1A1A] text-lg mb-4">Ações Rápidas</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <Button onClick={() => navigate('/partner/menu')} className="h-20 bg-[#D62828] hover:bg-[#D62828]/90 text-white flex-col" data-testid="manage-menu-btn">
+                  <UtensilsCrossed size={24} className="mb-2" /><span className="text-sm">Gerir Menu</span>
+                </Button>
+                <Button onClick={() => navigate('/partner/orders')} className="h-20 bg-[#2A9D8F] hover:bg-[#2A9D8F]/90 text-white flex-col" data-testid="manage-orders-btn">
+                  <ClipboardList size={24} className="mb-2" /><span className="text-sm">Pedidos</span>
+                </Button>
+                <Button onClick={() => navigate('/partner/documents')} variant="outline" className="h-20 border-2 flex-col hover:bg-gray-50" data-testid="manage-docs-btn">
+                  <FileCheck size={24} className="mb-2" /><span className="text-sm">Documentos</span>
+                </Button>
                 <Button
                   onClick={() => navigate('/partner/services')}
-                  className="h-20 bg-[#9333EA] hover:bg-[#9333EA]/90 text-white flex-col"
+                  variant="outline"
+                  className="h-20 border-2 flex-col hover:bg-gray-50"
                 >
                   <Store size={24} className="mb-2" />
-                  <span className="text-sm">Gerir Serviços</span>
+                  <span className="text-sm">Serviços</span>
                 </Button>
                 <Button
                   onClick={() => navigate('/partner/wallet')}

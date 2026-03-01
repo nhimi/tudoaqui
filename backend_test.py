@@ -537,6 +537,11 @@ class AngolaMarketplaceAPITester:
             self.test_restaurant_menu,
             self.test_create_order,
             self.test_get_orders,
+            self.test_get_tourist_places,
+            self.test_get_tourist_places_filtered,
+            self.test_get_tourist_place_detail,
+            self.test_create_booking,
+            self.test_get_bookings,
             self.test_logout
         ]
         

@@ -326,6 +326,182 @@ class AngolaMarketplaceAPITester:
         self.log_test("Get Orders", success, details)
         return success
         
+    def test_get_tourist_places(self):
+        """Test tourist places listing endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/tourist-places")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                if isinstance(data, list) and len(data) >= 8:
+                    # Check if we have the expected types
+                    types = set(place.get('type') for place in data)
+                    expected_types = {'hotel', 'resort', 'museu', 'parque', 'atrativo'}
+                    has_expected_types = expected_types.issubset(types)
+                    
+                    if has_expected_types:
+                        details = f"Found {len(data)} tourist places with correct types"
+                    else:
+                        success = False
+                        details = f"Missing expected types. Found: {types}"
+                else:
+                    success = False
+                    details = f"Expected at least 8 tourist places, got {len(data) if isinstance(data, list) else 0}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Get Tourist Places", success, details)
+        return success
+        
+    def test_get_tourist_places_filtered(self):
+        """Test tourist places filtered by type"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/tourist-places?type=hotel")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                if isinstance(data, list):
+                    # Check if all returned places are hotels
+                    all_hotels = all(place.get('type') == 'hotel' for place in data)
+                    if all_hotels and len(data) > 0:
+                        details = f"Found {len(data)} hotels filtered correctly"
+                    elif len(data) == 0:
+                        success = False
+                        details = "No hotels found in filter"
+                    else:
+                        success = False
+                        details = "Filter returned non-hotel places"
+                else:
+                    success = False
+                    details = "Invalid response format"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Get Tourist Places (Filtered)", success, details)
+        return success
+        
+    def test_get_tourist_place_detail(self):
+        """Test individual tourist place detail endpoint"""
+        try:
+            # First get tourist places to get an ID
+            places_response = self.session.get(f"{self.base_url}/api/tourist-places")
+            if places_response.status_code != 200:
+                self.log_test("Tourist Place Detail", False, "Could not fetch tourist places")
+                return False
+                
+            places = places_response.json()
+            if not places:
+                self.log_test("Tourist Place Detail", False, "No tourist places available")
+                return False
+                
+            place_id = places[0]['place_id']
+            
+            response = self.session.get(f"{self.base_url}/api/tourist-places/{place_id}")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                required_fields = ['place_id', 'name', 'type', 'description', 'location', 'price_per_night', 'images', 'rating', 'amenities', 'capacity']
+                has_all_fields = all(field in data for field in required_fields)
+                
+                if has_all_fields:
+                    details = f"Place detail loaded: {data.get('name')} ({data.get('type')})"
+                else:
+                    success = False
+                    missing_fields = [field for field in required_fields if field not in data]
+                    details = f"Missing fields: {missing_fields}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Tourist Place Detail", success, details)
+        return success
+        
+    def test_create_booking(self):
+        """Test booking creation endpoint"""
+        try:
+            # First get tourist places to get an ID
+            places_response = self.session.get(f"{self.base_url}/api/tourist-places")
+            if places_response.status_code != 200:
+                self.log_test("Booking Creation", False, "Could not fetch tourist places")
+                return False
+                
+            places = places_response.json()
+            if not places:
+                self.log_test("Booking Creation", False, "No tourist places available")
+                return False
+                
+            place_id = places[0]['place_id']
+            
+            # Create booking
+            from datetime import datetime, timedelta
+            check_in = (datetime.now() + timedelta(days=7)).isoformat()
+            check_out = (datetime.now() + timedelta(days=9)).isoformat()
+            
+            response = self.session.post(
+                f"{self.base_url}/api/bookings",
+                json={
+                    "place_id": place_id,
+                    "check_in": check_in,
+                    "check_out": check_out,
+                    "guests": 2,
+                    "payment_method": "multicaixa",
+                    "special_requests": "Teste de reserva via API"
+                }
+            )
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                # Verify calculated values
+                expected_nights = 2
+                if data.get('nights') == expected_nights:
+                    details = f"Booking created: {data.get('booking_id')} - {expected_nights} nights, Total: {data.get('total_price')} Kz"
+                else:
+                    success = False
+                    details = f"Wrong nights calculation: expected {expected_nights}, got {data.get('nights')}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Booking Creation", success, details)
+        return success
+        
+    def test_get_bookings(self):
+        """Test get user bookings endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/bookings")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                details = f"Found {len(data)} bookings for user"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Get Bookings", success, details)
+        return success
+        
     def test_logout(self):
         """Test user logout endpoint"""
         try:

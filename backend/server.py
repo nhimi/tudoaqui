@@ -75,6 +75,25 @@ class Ride(BaseModel):
     status: str
     created_at: str
 
+class AppConnection(BaseModel):
+    app_name: str
+    connected: bool
+    has_credentials: bool
+    icon: str
+
+class NavigationStep(BaseModel):
+    instruction: str
+    distance: float
+    duration: float
+    lat: float
+    lng: float
+
+class NavigationRoute(BaseModel):
+    distance: float
+    duration: int
+    steps: List[NavigationStep]
+    polyline: str
+
 class Restaurant(BaseModel):
     restaurant_id: str
     name: str

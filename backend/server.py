@@ -586,6 +586,95 @@ async def create_ride(request: Request, ride_data: RideRequest):
     
     return Ride(**ride_doc)
 
+@api_router.post("/rides/request")
+async def request_ride(request: Request, ride_data: dict):
+    """Pedido completo de corrida com estimativa de preço"""
+    user_id = await get_current_user(request)
+    
+    import math, random
+    pickup_lat = ride_data.get("pickup_lat", -8.8383)
+    pickup_lng = ride_data.get("pickup_lng", 13.2344)
+    dest_lat = ride_data.get("dest_lat", -8.8500)
+    dest_lng = ride_data.get("dest_lng", 13.2500)
+    vehicle_type = ride_data.get("vehicle_type", "standard")
+    
+    # Calculate distance
+    R = 6371
+    lat_diff = math.radians(dest_lat - pickup_lat)
+    lng_diff = math.radians(dest_lng - pickup_lng)
+    a = math.sin(lat_diff/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    distance = R * c
+    duration = int((distance / 30) * 60)
+    
+    # Price by vehicle type
+    base_per_km = {"standard": 150, "comfort": 250, "premium": 400}
+    price_km = base_per_km.get(vehicle_type, 150)
+    estimated_price = max(500, round(distance * price_km + 300, 0))  # min 500 Kz
+    
+    ride_id = f"ride_{uuid.uuid4().hex[:10]}"
+    ride_doc = {
+        "ride_id": ride_id,
+        "user_id": user_id,
+        "pickup_address": ride_data.get("pickup_address", ""),
+        "destination_address": ride_data.get("destination_address", ""),
+        "pickup_lat": pickup_lat, "pickup_lng": pickup_lng,
+        "dest_lat": dest_lat, "dest_lng": dest_lng,
+        "vehicle_type": vehicle_type,
+        "provider": "TudoAqui",
+        "price": estimated_price,
+        "distance_km": round(distance, 2),
+        "estimated_duration": duration,
+        "status": "solicitado",
+        "payment_method": ride_data.get("payment_method", "transferencia"),
+        "payment_status": "pendente",
+        "driver_name": None,
+        "driver_phone": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.rides.insert_one(ride_doc)
+    
+    # Simulate driver assignment after 2 seconds
+    driver_names = ["João Silva", "Maria Santos", "Pedro Costa", "Ana Mendes", "Carlos Ferreira"]
+    driver_phones = ["+244 923 111 222", "+244 912 333 444", "+244 924 555 666"]
+    
+    await db.rides.update_one(
+        {"ride_id": ride_id},
+        {"$set": {
+            "status": "aceite",
+            "driver_name": random.choice(driver_names),
+            "driver_phone": random.choice(driver_phones),
+            "accepted_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    updated_ride = await db.rides.find_one({"ride_id": ride_id}, {"_id": 0})
+    
+    return updated_ride
+
+@api_router.patch("/rides/{ride_id}/status")
+async def update_ride_status(request: Request, ride_id: str, status_data: dict):
+    """Atualizar status da corrida"""
+    user_id = await get_current_user(request)
+    
+    new_status = status_data.get("status")
+    valid = ["solicitado", "aceite", "em_andamento", "concluido", "cancelado"]
+    if new_status not in valid:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(valid)}")
+    
+    ride = await db.rides.find_one({"ride_id": ride_id}, {"_id": 0})
+    if not ride:
+        raise HTTPException(status_code=404, detail="Corrida não encontrada")
+    
+    update_data = {"status": new_status, "status_updated_at": datetime.now(timezone.utc).isoformat()}
+    if new_status == "concluido":
+        update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.rides.update_one({"ride_id": ride_id}, {"$set": update_data})
+    
+    return {"ride_id": ride_id, "status": new_status}
+
 @api_router.get("/rides", response_model=List[Ride])
 async def get_rides(request: Request):
     user_id = await get_current_user(request)

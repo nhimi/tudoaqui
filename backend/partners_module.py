@@ -458,3 +458,251 @@ async def get_partner_bank_details(request: Request):
         raise HTTPException(status_code=404, detail="Parceiro não encontrado")
     
     return {"bank_details": partner.get("bank_details", {}), "partner_id": partner["partner_id"]}
+
+
+# ============ DOCUMENT VERIFICATION ============
+
+@router.post("/documents/upload")
+async def upload_document(request: Request, doc_data: dict):
+    """Upload documento para verificação (base64)"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    doc_type = doc_data.get("doc_type")  # bi, nif, alvara
+    doc_base64 = doc_data.get("file_data", "")
+    doc_name = doc_data.get("file_name", "documento")
+    
+    valid_types = ["bi", "nif", "alvara", "outro"]
+    if doc_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Tipo inválido. Use: {', '.join(valid_types)}")
+    
+    if not doc_base64:
+        raise HTTPException(status_code=400, detail="Ficheiro obrigatório")
+    
+    doc_id = f"doc_{uuid.uuid4().hex[:10]}"
+    doc_doc = {
+        "document_id": doc_id,
+        "partner_id": partner["partner_id"],
+        "user_id": user_id,
+        "doc_type": doc_type,
+        "file_name": doc_name,
+        "file_data": doc_base64,
+        "status": "pendente",
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "reviewed_at": None,
+        "reviewed_by": None,
+        "rejection_reason": None
+    }
+    
+    await db.partner_documents.insert_one(doc_doc)
+    
+    return {"document_id": doc_id, "status": "pendente", "message": "Documento enviado para análise"}
+
+@router.get("/documents")
+async def get_my_documents(request: Request):
+    """Obter documentos do parceiro"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    docs = await db.partner_documents.find(
+        {"partner_id": partner["partner_id"]},
+        {"_id": 0, "file_data": 0}  # Exclude base64 from listing
+    ).sort("uploaded_at", -1).to_list(50)
+    
+    return {"documents": docs}
+
+@router.get("/documents/{doc_id}")
+async def get_document(request: Request, doc_id: str):
+    """Obter documento com dados (para preview)"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    doc = await db.partner_documents.find_one({"document_id": doc_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
+    
+    return doc
+
+# ============ PARTNER MENU MANAGEMENT ============
+
+@router.get("/menu-items")
+async def get_partner_menu_items(request: Request):
+    """Parceiro: listar itens do menu"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    # Get restaurant linked to this partner
+    restaurant = await db.restaurants.find_one({"partner_id": partner["partner_id"]}, {"_id": 0})
+    if not restaurant:
+        # Auto-create restaurant for partner
+        rest_id = f"rest_{uuid.uuid4().hex[:8]}"
+        restaurant = {
+            "restaurant_id": rest_id,
+            "partner_id": partner["partner_id"],
+            "name": partner["business_name"],
+            "description": f"Restaurante gerido por {partner['business_name']}",
+            "cuisine_type": "Angolana",
+            "rating": 0.0,
+            "review_count": 0,
+            "delivery_time": "30-45 min",
+            "delivery_fee": 500,
+            "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?crop=entropy&cs=srgb&fm=jpg&q=85",
+            "status": "active",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.restaurants.insert_one(restaurant)
+    
+    menu_items = await db.menu_items.find(
+        {"restaurant_id": restaurant["restaurant_id"]},
+        {"_id": 0}
+    ).to_list(200)
+    
+    return {"restaurant": {k: v for k, v in restaurant.items() if k != "_id"}, "menu_items": menu_items}
+
+@router.post("/menu-items")
+async def create_menu_item(request: Request, item_data: dict):
+    """Parceiro: adicionar item ao menu"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    restaurant = await db.restaurants.find_one({"partner_id": partner["partner_id"]}, {"_id": 0})
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurante não encontrado. Aceda primeiro à lista de menu.")
+    
+    item_id = f"item_{uuid.uuid4().hex[:8]}"
+    item_doc = {
+        "item_id": item_id,
+        "restaurant_id": restaurant["restaurant_id"],
+        "partner_id": partner["partner_id"],
+        "name": item_data.get("name", ""),
+        "description": item_data.get("description", ""),
+        "price": float(item_data.get("price", 0)),
+        "category": item_data.get("category", "Principal"),
+        "image": item_data.get("image", "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?crop=entropy&cs=srgb&fm=jpg&q=85"),
+        "available": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.menu_items.insert_one(item_doc)
+    return {k: v for k, v in item_doc.items() if k != "_id"}
+
+@router.put("/menu-items/{item_id}")
+async def update_menu_item(request: Request, item_id: str, item_data: dict):
+    """Parceiro: editar item do menu"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    item = await db.menu_items.find_one({"item_id": item_id, "partner_id": partner["partner_id"]})
+    if not item:
+        raise HTTPException(status_code=404, detail="Item não encontrado")
+    
+    update_fields = {}
+    for field in ["name", "description", "price", "category", "image", "available"]:
+        if field in item_data:
+            update_fields[field] = item_data[field]
+    
+    if update_fields:
+        update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.menu_items.update_one({"item_id": item_id}, {"$set": update_fields})
+    
+    updated = await db.menu_items.find_one({"item_id": item_id}, {"_id": 0})
+    return updated
+
+@router.delete("/menu-items/{item_id}")
+async def delete_menu_item(request: Request, item_id: str):
+    """Parceiro: remover item do menu"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    result = await db.menu_items.delete_one({"item_id": item_id, "partner_id": partner["partner_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Item não encontrado")
+    
+    return {"message": "Item removido com sucesso"}
+
+# ============ PARTNER ORDER MANAGEMENT ============
+
+@router.get("/incoming-orders")
+async def get_incoming_orders(request: Request, status: str = None):
+    """Parceiro: ver pedidos recebidos"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    restaurant = await db.restaurants.find_one({"partner_id": partner["partner_id"]}, {"_id": 0})
+    if not restaurant:
+        return {"orders": [], "total": 0}
+    
+    query = {"restaurant_id": restaurant["restaurant_id"]}
+    if status:
+        query["status"] = status
+    
+    orders = await db.orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    return {"orders": orders, "total": len(orders)}
+
+@router.patch("/incoming-orders/{order_id}")
+async def update_incoming_order(request: Request, order_id: str, status_data: dict):
+    """Parceiro: atualizar status do pedido"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    new_status = status_data.get("status")
+    valid = ["confirmado", "preparando", "a_caminho", "entregue", "cancelado"]
+    if new_status not in valid:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(valid)}")
+    
+    order = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    await db.orders.update_one(
+        {"order_id": order_id},
+        {"$set": {"status": new_status, "status_updated_at": now},
+         "$push": {"status_history": {"status": new_status, "updated_at": now, "updated_by": user_id}}}
+    )
+    
+    # Create notification for customer
+    from notifications_module import create_notification
+    status_labels = {"confirmado": "confirmado", "preparando": "em preparação", "a_caminho": "a caminho", "entregue": "entregue", "cancelado": "cancelado"}
+    await create_notification(
+        order["user_id"],
+        f"Pedido {new_status.replace('_', ' ')}",
+        f"O seu pedido em {order.get('restaurant_name', '')} está {status_labels.get(new_status, new_status)}",
+        "order_status",
+        order_id
+    )
+    
+    return {"order_id": order_id, "status": new_status, "message": f"Pedido atualizado para {new_status}"}

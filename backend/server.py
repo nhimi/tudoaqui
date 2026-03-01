@@ -20,6 +20,7 @@ from tourism_router import router as tourism_router
 from properties_router import router as properties_router
 from admin_module import router as admin_router
 from notifications_module import router as notifications_router
+from referral_module import router as referral_router
 from fiscal_compliance import (
     calculate_iva, calculate_commission_with_taxes,
     calculate_retencao_na_fonte, calculate_imposto_industrial,

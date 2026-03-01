@@ -1008,6 +1008,9 @@ async def get_user_tier(request: Request):
 app.include_router(api_router)
 app.include_router(partners_router, prefix="/api")
 app.include_router(accounting_router, prefix="/api")
+app.include_router(payments_router, prefix="/api")
+app.include_router(tourism_router, prefix="/api")
+app.include_router(properties_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

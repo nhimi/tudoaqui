@@ -1212,6 +1212,7 @@ async def get_property_inquiries(request: Request):
     return inquiries
 
 app.include_router(api_router)
+app.include_router(partners_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

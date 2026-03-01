@@ -45,7 +45,7 @@ function AppRouter() {
         path="/taxi"
         element={
           <ProtectedRoute>
-            <Taxi />
+            <TaxiNew />
           </ProtectedRoute>
         }
       />

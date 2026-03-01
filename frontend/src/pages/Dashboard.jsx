@@ -66,9 +66,24 @@ export default function Dashboard({ user }) {
           }}
         >
           <div className="relative z-10">
-            <h1 className="text-3xl font-bold text-white mb-2" data-testid="dashboard-greeting">
-              Olá, {user?.name?.split(' ')[0] || 'Amigo'}!
-            </h1>
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-3xl font-bold text-white" data-testid="dashboard-greeting">
+                Olá, {user?.name?.split(' ')[0] || 'Amigo'}!
+              </h1>
+              <div className="flex gap-2">
+                <button onClick={() => navigate('/notifications')} className="relative w-10 h-10 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/25 transition" data-testid="notifications-btn">
+                  <Bell size={20} className="text-white" />
+                  {unreadNotifs > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FCBF49] text-[#1A1A1A] text-xs font-bold rounded-full flex items-center justify-center">{unreadNotifs}</span>
+                  )}
+                </button>
+                {user?.admin_role && (
+                  <button onClick={() => navigate('/admin')} className="w-10 h-10 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/25 transition" data-testid="admin-btn">
+                    <Shield size={20} className="text-white" />
+                  </button>
+                )}
+              </div>
+            </div>
             <p className="text-white/90 text-sm">O que precisa hoje?</p>
           </div>
         </div>

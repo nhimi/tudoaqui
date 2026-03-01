@@ -14,7 +14,10 @@ import {
   ArrowUpRight,
   Crown,
   Users,
-  BarChart3
+  BarChart3,
+  UtensilsCrossed,
+  ClipboardList,
+  FileCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 

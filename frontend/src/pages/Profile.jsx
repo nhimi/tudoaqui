@@ -105,6 +105,13 @@ export default function Profile({ user }) {
             <LogOut className="mr-2" size={20} />
             Terminar Sessão
           </Button>
+
+          <div className="text-center text-xs text-gray-500 mt-6 pt-6 border-t">
+            <p className="font-semibold text-gray-700">TudoAqui Marketplace</p>
+            <p className="mt-1">Desenvolvido por</p>
+            <p className="font-semibold text-gray-700">Sincesoft-Sinceridade Service</p>
+            <p className="mt-2 text-gray-400">Versão 1.0.0</p>
+          </div>
         </div>
       </div>
       

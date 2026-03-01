@@ -130,12 +130,26 @@ export default function Dashboard({ user }) {
             </p>
             <Button 
               data-testid="become-partner-btn"
-              onClick={() => navigate('/partner/register')}
+              onClick={() => navigate(user?.is_partner ? '/partner/dashboard' : '/partner/register')}
               className="bg-white text-[#9333EA] hover:bg-white/90 font-semibold h-10 rounded-lg"
             >
-              Tornar-se Parceiro
+              {user?.is_partner ? 'Ir ao Dashboard' : 'Tornar-se Parceiro'}
             </Button>
           </Card>
+
+          {/* Quick Links */}
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <Card data-testid="my-orders-link" onClick={() => navigate('/orders')} className="p-4 bg-white border-black/5 rounded-xl shadow-sm hover-lift cursor-pointer flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#D62828]/10 rounded-lg flex items-center justify-center"><Briefcase size={20} className="text-[#D62828]" /></div>
+              <div><p className="font-bold text-sm text-[#1A1A1A]">Meus Pedidos</p><p className="text-xs text-gray-500">Histórico</p></div>
+            </Card>
+            {user?.is_partner && (
+              <Card data-testid="partner-analytics-link" onClick={() => navigate('/partner/analytics')} className="p-4 bg-white border-black/5 rounded-xl shadow-sm hover-lift cursor-pointer flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#2A9D8F]/10 rounded-lg flex items-center justify-center"><BarChart3 size={20} className="text-[#2A9D8F]" /></div>
+                <div><p className="font-bold text-sm text-[#1A1A1A]">Analytics</p><p className="text-xs text-gray-500">Relatórios</p></div>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
       

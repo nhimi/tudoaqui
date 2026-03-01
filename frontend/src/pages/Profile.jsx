@@ -81,6 +81,11 @@ export default function Profile() {
 
   return (
     <div className="mobile-container">
+      {loading ? (
+        <div className="min-h-screen bg-[#F7F5F0] flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-[#D62828] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : (
       <div className="min-h-screen bg-[#F7F5F0] pb-20">
         <div className="bg-gradient-to-br from-[#1A1A1A] to-[#1A1A1A]/90 px-6 pt-12 pb-20 rounded-b-[2rem]">
           <h1 className="text-3xl font-bold text-white mb-8" data-testid="profile-page-title">Perfil</h1>

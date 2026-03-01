@@ -359,6 +359,124 @@ async def logout(request: Request, response: Response):
     response.delete_cookie(key="session_token", path="/")
     return {"message": "Logged out successfully"}
 
+
+@api_router.get("/taxi/connected-apps")
+async def get_connected_apps(request: Request):
+    user_id = await get_current_user(request)
+    
+    # Simular verificação de apps instalados
+    # Em ambiente mobile real, isso verificaria apps instalados no dispositivo
+    apps = [
+        {"app_name": "Yango", "connected": False, "has_credentials": False, "icon": "🚖", "installed": True},
+        {"app_name": "Heetch", "connected": False, "has_credentials": False, "icon": "🚗", "installed": True},
+        {"app_name": "Ugo", "connected": False, "has_credentials": False, "icon": "🚙", "installed": False},
+        {"app_name": "Tupuca Taxi", "connected": False, "has_credentials": False, "icon": "🚕", "installed": True}
+    ]
+    
+    # Verificar se usuário já conectou algum app
+    connections = await db.app_connections.find({"user_id": user_id}, {"_id": 0}).to_list(10)
+    
+    for app in apps:
+        connection = next((c for c in connections if c["app_name"] == app["app_name"]), None)
+        if connection:
+            app["connected"] = connection.get("connected", False)
+            app["has_credentials"] = connection.get("has_credentials", False)
+    
+    return {"apps": apps}
+
+@api_router.post("/taxi/connect-app")
+async def connect_app(request: Request, app_data: dict):
+    user_id = await get_current_user(request)
+    app_name = app_data.get("app_name")
+    credentials = app_data.get("credentials")
+    
+    # Salvar conexão do app
+    await db.app_connections.update_one(
+        {"user_id": user_id, "app_name": app_name},
+        {
+            "$set": {
+                "user_id": user_id,
+                "app_name": app_name,
+                "connected": True,
+                "has_credentials": credentials is not None,
+                "credentials_encrypted": credentials,  # Em produção, criptografar
+                "connected_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": f"{app_name} conectado com sucesso", "connected": True}
+
+@api_router.delete("/taxi/disconnect-app/{app_name}")
+async def disconnect_app(request: Request, app_name: str):
+    user_id = await get_current_user(request)
+    
+    await db.app_connections.delete_one({"user_id": user_id, "app_name": app_name})
+    
+    return {"message": f"{app_name} desconectado", "connected": False}
+
+@api_router.get("/taxi/navigation-route")
+async def get_navigation_route(
+    request: Request,
+    pickup_lat: float,
+    pickup_lng: float,
+    dest_lat: float,
+    dest_lng: float
+):
+    await get_current_user(request)
+    
+    # Simular cálculo de rota (em produção, usar Google Maps API ou similar)
+    import math
+    
+    # Calcular distância aproximada (fórmula de Haversine simplificada)
+    R = 6371  # Raio da Terra em km
+    lat_diff = math.radians(dest_lat - pickup_lat)
+    lng_diff = math.radians(dest_lng - pickup_lng)
+    a = math.sin(lat_diff/2) * math.sin(lat_diff/2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    distance = R * c
+    
+    # Estimar duração (assumindo 30 km/h em média)
+    duration = int((distance / 30) * 60)  # minutos
+    
+    # Criar pontos da rota simplificados
+    steps = [
+        {
+            "instruction": "Siga em frente na rua atual",
+            "distance": distance * 0.3,
+            "duration": duration * 0.3,
+            "lat": pickup_lat + (dest_lat - pickup_lat) * 0.3,
+            "lng": pickup_lng + (dest_lng - pickup_lng) * 0.3
+        },
+        {
+            "instruction": "Vire à direita",
+            "distance": distance * 0.4,
+            "duration": duration * 0.4,
+            "lat": pickup_lat + (dest_lat - pickup_lat) * 0.6,
+            "lng": pickup_lng + (dest_lng - pickup_lng) * 0.6
+        },
+        {
+            "instruction": "Continue reto até o destino",
+            "distance": distance * 0.3,
+            "duration": duration * 0.3,
+            "lat": dest_lat,
+            "lng": dest_lng
+        }
+    ]
+    
+    # Criar polyline simples (lista de coordenadas)
+    polyline = f"{pickup_lat},{pickup_lng}|{dest_lat},{dest_lng}"
+    
+    return {
+        "distance": round(distance, 2),
+        "duration": duration,
+        "steps": steps,
+        "polyline": polyline,
+        "pickup": {"lat": pickup_lat, "lng": pickup_lng},
+        "destination": {"lat": dest_lat, "lng": dest_lng}
+    }
+
 @api_router.get("/rides/compare")
 async def compare_ride_prices(request: Request, pickup_lat: float, pickup_lng: float, dest_lat: float, dest_lng: float):
     await get_current_user(request)

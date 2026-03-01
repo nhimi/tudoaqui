@@ -1239,6 +1239,54 @@ async def get_property_inquiries(request: Request):
     
     return inquiries
 
+@api_router.get("/fiscal/iva-calculate")
+async def fiscal_iva_calculate(request: Request, amount: float, rate_type: str = "normal"):
+    """Calcular IVA sobre um valor"""
+    await get_current_user(request)
+    return calculate_iva(amount, rate_type)
+
+@api_router.get("/fiscal/commission-calculate")
+async def fiscal_commission_calculate(
+    request: Request, amount: float, commission_rate: float = 0.10,
+    include_iva: bool = True, apply_retencao: bool = True
+):
+    """Calcular comissão com impostos"""
+    await get_current_user(request)
+    return calculate_commission_with_taxes(amount, commission_rate, include_iva, apply_retencao)
+
+@api_router.get("/fiscal/rules")
+async def fiscal_rules(request: Request):
+    """Obter regras fiscais angolanas"""
+    await get_current_user(request)
+    return {
+        "rules": FISCAL_COMPLIANCE_RULES,
+        "iva_rates": IVA_RATES
+    }
+
+@api_router.post("/fiscal/validate-nif")
+async def fiscal_validate_nif(request: Request, data: dict):
+    """Validar NIF angolano"""
+    await get_current_user(request)
+    nif = data.get("nif", "")
+    is_valid = validate_nif(nif)
+    return {"nif": nif, "is_valid": is_valid}
+
+@api_router.get("/user/tier")
+async def get_user_tier(request: Request):
+    """Obter tier do utilizador atual"""
+    user_id = await get_current_user(request)
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    current_tier = user.get("user_tier", "normal")
+    return {
+        "user_id": user_id,
+        "current_tier": current_tier,
+        "name": user.get("name", ""),
+        "email": user.get("email", "")
+    }
+
 app.include_router(api_router)
 app.include_router(partners_router, prefix="/api")
 app.include_router(accounting_router, prefix="/api")

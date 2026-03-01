@@ -310,3 +310,70 @@ async def get_tiers():
         "partner_tiers": PARTNER_TIERS,
         "user_tiers": USER_TIERS
     }
+
+@router.get("/user-tier")
+async def get_user_tier(request: Request):
+    """Obter tier do utilizador atual"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    current_tier = user.get("user_tier", "normal")
+    tier_info = USER_TIERS.get(current_tier, USER_TIERS["normal"])
+    
+    return {
+        "user_id": user_id,
+        "current_tier": current_tier,
+        "tier_info": tier_info,
+        "available_tiers": USER_TIERS
+    }
+
+@router.post("/user-tier/upgrade")
+async def upgrade_user_tier(request: Request, tier_data: dict):
+    """Fazer upgrade do tier do utilizador"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    new_tier = tier_data.get("tier")
+    if new_tier not in USER_TIERS:
+        raise HTTPException(status_code=400, detail="Tier inválido")
+    
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    current_tier = user.get("user_tier", "normal")
+    if current_tier == new_tier:
+        raise HTTPException(status_code=400, detail="Já possui este tier")
+    
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"user_tier": new_tier, "tier_updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {
+        "user_id": user_id,
+        "new_tier": new_tier,
+        "tier_info": USER_TIERS[new_tier],
+        "message": f"Upgrade para {USER_TIERS[new_tier]['name']} realizado com sucesso!"
+    }
+
+@router.post("/approve/{partner_id}")
+async def approve_partner(request: Request, partner_id: str):
+    """Aprovar parceiro (admin)"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"partner_id": partner_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    await db.partners.update_one(
+        {"partner_id": partner_id},
+        {"$set": {"status": "active", "approved_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"partner_id": partner_id, "status": "active", "message": "Parceiro aprovado com sucesso"}

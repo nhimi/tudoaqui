@@ -11,6 +11,9 @@ import Restaurants from './pages/Restaurants';
 import RestaurantMenu from './pages/RestaurantMenu';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
+import Tourism from './pages/Tourism';
+import PlaceDetail from './pages/PlaceDetail';
+import Bookings from './pages/Bookings';
 import Profile from './pages/Profile';
 import '@/App.css';
 

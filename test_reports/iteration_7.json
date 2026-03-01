@@ -1,0 +1,117 @@
+{
+  "summary": "Iteration 7 Testing Complete - All 27 backend tests passed, all 9 frontend tests passed. New features working: Document Verification (upload, admin review, approve/reject), IVA Toggle (admin enable/disable at 14%), Partner Menu Management (CRUD with auto-restaurant creation), Partner Order Management (status updates with customer notifications), Sales Reports (day/week/month with IVA calculation), Referral System (unique codes, apply code, coupons).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Menu Management Dialog",
+        "issues": ["Console warning: Missing Description or aria-describedby for DialogContent - accessibility improvement needed"]
+      }
+    ]
+  },
+  "passed_tests": [
+    "✅ POST /api/partners/documents/upload - uploads document (base64) for review, status=pendente",
+    "✅ GET /api/partners/documents - lists partner documents without file_data (security)",
+    "✅ GET /api/admin/documents/pending - lists pending documents for admin with partner business_name",
+    "✅ POST /api/admin/documents/{doc_id}/review - approve document, status=aprovado",
+    "✅ POST /api/admin/documents/{doc_id}/review - reject document with reason, status=rejeitado",
+    "✅ Invalid doc_type rejected (400 error)",
+    "✅ GET /api/admin/iva-settings - returns enabled=true, rate=14.0",
+    "✅ PUT /api/admin/iva-settings - toggle IVA on/off with custom rate",
+    "✅ GET /api/settings/iva - public IVA settings for checkout",
+    "✅ GET /api/partners/menu-items - auto-creates restaurant, returns menu items",
+    "✅ POST /api/partners/menu-items - creates new menu item with available=true",
+    "✅ PUT /api/partners/menu-items/{id} - updates menu item (name, price, available)",
+    "✅ DELETE /api/partners/menu-items/{id} - deletes menu item",
+    "✅ GET /api/partners/incoming-orders - lists orders for partner's restaurant",
+    "✅ POST /api/orders - creates order for partner's restaurant (by second user)",
+    "✅ PATCH /api/partners/incoming-orders/{id} - updates order status (confirmado→preparando→a_caminho→entregue)",
+    "✅ GET /api/partners/incoming-orders?status=X - filters orders by status",
+    "✅ Invalid order status rejected (400 error)",
+    "✅ GET /api/admin/reports/sales?period=day - sales report with IVA calculation",
+    "✅ GET /api/admin/reports/sales?period=week - weekly sales report",
+    "✅ GET /api/admin/reports/sales?period=month - monthly sales report with data export",
+    "✅ GET /api/referral/my-code - generates/returns TUDO57HVMR code, stats, rewards",
+    "✅ Referral rewards: referrer=500Kz discount, referred=20% off first order",
+    "✅ GET /api/referral/my-referrals - lists referrals made by user",
+    "✅ GET /api/referral/my-coupons - lists user's coupons (1 active 500Kz)",
+    "✅ Cannot use own referral code (400 error)",
+    "✅ Invalid referral code rejected (404 error)",
+    "✅ Frontend: Partner Dashboard has Menu, Orders, Documents buttons",
+    "✅ Frontend: /partner/menu shows menu items with add/edit/delete/toggle buttons",
+    "✅ Frontend: /partner/orders shows incoming orders with status filter and update buttons",
+    "✅ Frontend: /partner/documents shows upload form and document list with statuses",
+    "✅ Frontend: /referral shows code TUDO57HVMR, stats, apply form, coupons",
+    "✅ Frontend: Dashboard has 'Convidar Amigos' referral link"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_iteration7_features.py",
+    "/app/test_reports/pytest/pytest_iteration7_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Document upload correctly excludes file_data from GET listings (security)",
+    "IVA is correctly applied to orders when enabled (14%)",
+    "Order total now includes IVA amount when IVA is enabled",
+    "Referral code format: TUDO + 6 alphanumeric chars (TUDO57HVMR)",
+    "Partner restaurant auto-created when accessing menu items"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration7_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (27/27 tests passed)",
+    "frontend": "100% (9/9 UI tests passed)"
+  },
+  "test_credentials": {
+    "admin_partner": {"email": "test@tudoaqui.ao", "password": "test123", "admin_role": "ceo", "is_partner": true},
+    "regular_user": {"email": "amigo@tudoaqui.ao", "password": "test123", "note": "Used for order creation and referral testing"}
+  },
+  "seed_data_creation": "Multiple test documents uploaded (BI, NIF), test menu items created, test order created by second user",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 7 fully tested. Document verification: partner uploads base64 docs, admin approves/rejects. IVA at 14% enabled via admin toggle. Partner restaurant auto-created for 'Test Partner Luanda' with 2 menu items (Muamba de Galinha 3500Kz, Updated Test Item 2000Kz unavailable). 1 incoming order (8480 Kz with IVA) in 'A Preparar' status. Referral code TUDO57HVMR has 1 successful referral, user has 1 active 500Kz coupon. amigo@tudoaqui.ao already used a referral code. Bank accounts are EXAMPLE DATA. Driver assignment is SIMULATED.",
+  "mocked_apis": {
+    "note": "Bank accounts are example data. Driver assignment is simulated.",
+    "mocked_apis_list": [
+      "Bank accounts (example IBAN/NIF data)",
+      "Driver assignment (random names/phones)"
+    ]
+  },
+  "features_verified": {
+    "document_verification": {
+      "upload": "Partner uploads BI/NIF/Alvará as base64, stored with status=pendente",
+      "listing": "file_data excluded from listings for security",
+      "admin_review": "Admin can approve/reject with optional reason"
+    },
+    "iva_toggle": {
+      "admin_control": "CEO can enable/disable IVA and set rate (currently 14%)",
+      "checkout_integration": "Orders include IVA amount when enabled"
+    },
+    "partner_menu": {
+      "auto_restaurant": "Restaurant auto-created on first menu access",
+      "crud": "Create/Read/Update/Delete menu items working",
+      "visibility": "Toggle item availability (available=true/false)"
+    },
+    "partner_orders": {
+      "incoming": "Partner sees orders for their restaurant",
+      "status_flow": "confirmado→preparando→a_caminho→entregue",
+      "notifications": "Customer notified on status change"
+    },
+    "sales_reports": {
+      "periods": "day/week/month filters working",
+      "iva_calculation": "IVA amount calculated based on enabled rate",
+      "data_export": "Orders and payments data included for export"
+    },
+    "referral_system": {
+      "code_generation": "TUDO + 6 chars format",
+      "rewards": "Referrer: 500Kz, Referred: 20%",
+      "coupons": "Coupons created for both users on apply"
+    }
+  }
+}

@@ -1113,6 +1113,7 @@ app.include_router(tourism_router, prefix="/api")
 app.include_router(properties_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
+app.include_router(referral_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

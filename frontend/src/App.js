@@ -162,6 +162,15 @@ function AppRouter() {
       />
       
       <Route
+        path="/partner/accounting"
+        element={
+          <ProtectedRoute>
+            <AccountingDashboard />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
         path="/profile"
         element={
           <ProtectedRoute>

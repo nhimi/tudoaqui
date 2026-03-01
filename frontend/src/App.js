@@ -206,6 +206,42 @@ function AppRouter() {
       />
       
       <Route
+        path="/partner/menu"
+        element={
+          <ProtectedRoute>
+            <PartnerMenuManagement />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/partner/orders"
+        element={
+          <ProtectedRoute>
+            <PartnerOrders />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/partner/documents"
+        element={
+          <ProtectedRoute>
+            <PartnerDocuments />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/referral"
+        element={
+          <ProtectedRoute>
+            <ReferralPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
         path="/notifications"
         element={
           <ProtectedRoute>

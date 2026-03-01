@@ -17,6 +17,8 @@ import Bookings from './pages/Bookings';
 import Properties from './pages/Properties';
 import PropertyDetail from './pages/PropertyDetail';
 import Inquiries from './pages/Inquiries';
+import PartnerDashboard from './pages/PartnerDashboard';
+import PartnerRegister from './pages/PartnerRegister';
 import Profile from './pages/Profile';
 import '@/App.css';
 

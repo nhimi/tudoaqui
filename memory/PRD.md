@@ -1,87 +1,93 @@
-# TudoAqui Marketplace - PRD (Product Requirements Document)
+# TudoAqui Marketplace - PRD
 
 ## Original Problem Statement
 Build a comprehensive marketplace app for Angola called **TudoAqui**, developed by **Sincesoft-Sinceridade Service**.
 
 ### Core Modules
-1. **Taxi** - Price comparison with existing apps (Yango, Heetch, Ugo, Tupuca), interactive GPS map
-2. **Restaurant** - Integration with delivery systems, menu browsing, ordering
-3. **Tourism** - Directory for tourist spots with information, pricing, reservations
+1. **Taxi** - Price comparison with interactive GPS map (react-leaflet)
+2. **Restaurant** - Menu browsing, ordering, checkout with payment, reviews/ratings
+3. **Tourism** - Directory for tourist spots with booking
 4. **Real Estate (Mixeiro)** - B2B/B2C platform for renting/selling properties
-5. **Payments** - Angolan payment systems (Multicaixa Express, Unitelmoney, BAI Paga)
+5. **Payments** - Temporary bank transfer system with confirmation codes
 6. **Partner System** - B2B/B2C with tier management, wallet, service control
-7. **Accounting** - PGCA-based accounting (Journal, Ledger, Trial Balance, Balance Sheet)
-8. **Fiscal Compliance** - Angolan fiscal regulations (IVA 14%, retention, industrial tax)
-
-### User Personas
-- **Regular Users**: Browse services, order food, book taxis, find properties
-- **Premium Users**: Discounts, no service fees, priority support
-- **Partners (Básico/Premium/Enterprise)**: Business owners managing services on the platform
+7. **Accounting** - PGCA-based accounting (Journal, Trial Balance, Balance Sheet)
+8. **Fiscal Compliance** - Angolan fiscal regulations (IVA 14%, retention)
 
 ## Architecture
 - **Frontend**: React, React Router, Tailwind CSS, Shadcn UI, react-leaflet
-- **Backend**: FastAPI, Motor (async MongoDB), Pydantic
+- **Backend**: FastAPI (modular routers), Motor (async MongoDB), Pydantic
 - **Database**: MongoDB
 - **Auth**: Session-based + Emergent Google OAuth
 
+### Backend Modules
+- `server.py` - Main API (auth, restaurants, orders, reviews, fiscal, backward compat routes)
+- `payments_module.py` - Bank transfer payments with confirmation codes
+- `partners_module.py` - Partner B2B system and user tier management
+- `accounting_module.py` - PGCA accounting module
+- `fiscal_compliance.py` - Angolan tax calculations
+- `tourism_router.py` - Tourist places and bookings
+- `properties_router.py` - Real estate listings and inquiries
+
 ## What's Been Implemented
 
-### Completed Features
-- [x] User authentication (email/password + Google OAuth)
-- [x] Landing page with TudoAqui branding
+### Completed Features (Feb 2026)
+- [x] User auth (email/password + Google OAuth)
 - [x] Dashboard with quick actions
-- [x] Taxi module with interactive map (react-leaflet), price comparison
+- [x] Taxi module with interactive map, price comparison
 - [x] Restaurant module with search, cuisine filters, menu, ordering, checkout
-- [x] Tourism module with listings, detail pages, booking
+- [x] Restaurant reviews and ratings system
+- [x] Tourism module with listings, detail, booking
 - [x] Real Estate module with property listings, detail, inquiries
-- [x] Partner registration and dashboard
-- [x] Partner tier system (Básico/Premium/Enterprise)
+- [x] Partner registration and dashboard with tiers
 - [x] User tier system (Normal/Premium) with upgrade/downgrade
-- [x] Accounting module (PGCA chart of accounts, journal entries, trial balance, balance sheet, income statement)
+- [x] Accounting module (PGCA chart, journal entries, trial balance, balance sheet)
 - [x] Journal entry creation form
 - [x] Fiscal compliance calculations (IVA, retention, industrial tax)
-- [x] Bottom navigation
-- [x] Profile page with tier management
+- [x] **Payment system via bank transfer with confirmation codes**
+- [x] **Order tracking with status steps (confirmado -> preparando -> a_caminho -> entregue)**
+- [x] **Restaurant reviews/ratings**
+- [x] **Backend refactored** (tourism, properties extracted to separate routers)
 
-### Mocked/Simulated Features
-- Payment gateways (Multicaixa Express, Unitelmoney, BAI Paga)
+### Payment Flow
+1. User creates order -> payment created with unique 8-char code
+2. Bank details displayed (BAI IBAN, NIF, or Unitel Money phone)
+3. User makes transfer, enters confirmation code
+4. Payment confirmed -> order status updated
+
+### Simulated Features
+- Bank transfer verification (code matching only, no real bank API)
+- Bank account details are example data
 - External app integrations (Yango, Heetch, Tupuca)
-- Taxi price comparison (random simulation)
-- Order tracking/status updates
 
 ## Backlog
 
-### P0 - System Audit & Fiscal Integration
-- [ ] Integrate fiscal compliance into partner transactions
+### P0 - Remaining
+- [ ] Integrate fiscal compliance into actual partner transactions (IVA on orders)
 - [ ] Full end-to-end system audit
-- [ ] Apply IVA to orders and partner commissions
 
-### P1 - Core Logic Enhancement
-- [ ] Implement real payment gateway integrations (requires API keys)
-- [ ] External app integrations (Tupuca, Mano - requires API keys)
+### P1 - Core
+- [ ] Real payment gateway integration (Multicaixa Express API, Unitelmoney API, BAI Paga API) - requires API keys
 - [ ] Partner document verification workflow
-- [ ] Define and implement Premium user feature restrictions
+- [ ] Premium user feature restrictions enforcement
+- [ ] Partner analytics dashboard
 
-### P2 - UI/UX Polish
-- [ ] Restaurant module: order tracking with status updates
-- [ ] Restaurant module: ratings and reviews
-- [ ] Partner dashboard: analytics page
-- [ ] Partner services management page
+### P2 - Enhancements
+- [ ] Restaurant: order tracking real-time updates
+- [ ] Push notifications for order status changes
+- [ ] Partner: manage incoming orders
 
-### P3 - Refactoring
-- [ ] Move Tourism routes from server.py to tourism_router.py
-- [ ] Move Properties routes from server.py to properties_router.py
+### P3 - Future
+- [ ] External app integrations (Tupuca, Mano)
+- [ ] Fully flesh out Restaurant module (partner-managed menus)
 
-## Key API Endpoints
-- Auth: `/api/auth/register`, `/api/auth/login`, `/api/auth/session`, `/api/auth/me`
-- Taxi: `/api/rides/compare`, `/api/taxi/navigation-route`
+## Key Endpoints
+- Auth: `/api/auth/register`, `/api/auth/login`, `/api/auth/session`
 - Restaurants: `/api/restaurants`, `/api/restaurants/search`, `/api/restaurants/{id}/menu`
-- Orders: `/api/orders`
+- Orders: `/api/orders`, `PATCH /api/orders/{id}/status`
+- Reviews: `POST /api/reviews`, `GET /api/reviews/{restaurant_id}`
+- Payments: `POST /api/payments/create`, `POST /api/payments/confirm`, `GET /api/payments/bank-accounts`
 - Tourism: `/api/tourist-places`, `/api/bookings`
 - Properties: `/api/properties`, `/api/property-inquiries`
 - Partners: `/api/partners/register`, `/api/partners/dashboard`, `/api/partners/user-tier/upgrade`
-- Accounting: `/api/accounting/journal-entry`, `/api/accounting/trial-balance`, `/api/accounting/balance-sheet`
-- Fiscal: `/api/fiscal/iva-calculate`, `/api/fiscal/rules`, `/api/fiscal/validate-nif`
-
-## Database Collections
-users, user_sessions, restaurants, menu_items, orders, tourist_places, bookings, properties, property_inquiries, partners, partner_wallets, transactions, service_listings, accounting_records, journal_entries, journal_lines, app_connections, rides
+- Accounting: `/api/accounting/journal-entry`, `/api/accounting/trial-balance`
+- Fiscal: `/api/fiscal/iva-calculate`, `/api/fiscal/rules`

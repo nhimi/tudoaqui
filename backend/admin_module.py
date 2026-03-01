@@ -298,3 +298,163 @@ async def setup_admin(request: Request):
     )
     
     return {"message": "Configurado como CEO com sucesso!", "admin_role": "ceo"}
+
+
+# ============ DOCUMENT VERIFICATION (Admin) ============
+
+@router.get("/documents/pending")
+async def get_pending_documents(request: Request):
+    """Admin: ver documentos pendentes de aprovação"""
+    await require_admin(request)
+    db = await get_db()
+    
+    docs = await db.partner_documents.find(
+        {"status": "pendente"},
+        {"_id": 0, "file_data": 0}
+    ).sort("uploaded_at", -1).to_list(100)
+    
+    # Enrich with partner info
+    for doc in docs:
+        partner = await db.partners.find_one({"partner_id": doc["partner_id"]}, {"_id": 0})
+        doc["business_name"] = partner.get("business_name", "N/A") if partner else "N/A"
+    
+    return {"documents": docs, "total": len(docs)}
+
+@router.get("/documents/all")
+async def get_all_documents(request: Request, status: Optional[str] = None):
+    """Admin: ver todos os documentos"""
+    await require_admin(request)
+    db = await get_db()
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    docs = await db.partner_documents.find(query, {"_id": 0, "file_data": 0}).sort("uploaded_at", -1).to_list(200)
+    
+    for doc in docs:
+        partner = await db.partners.find_one({"partner_id": doc["partner_id"]}, {"_id": 0})
+        doc["business_name"] = partner.get("business_name", "N/A") if partner else "N/A"
+    
+    return {"documents": docs, "total": len(docs)}
+
+@router.post("/documents/{doc_id}/review")
+async def review_document(request: Request, doc_id: str, review_data: dict):
+    """Admin: aprovar ou rejeitar documento"""
+    user_id, role = await require_admin(request, min_level=2)
+    db = await get_db()
+    
+    action = review_data.get("action")  # approve, reject
+    reason = review_data.get("reason", "")
+    
+    if action not in ["approve", "reject"]:
+        raise HTTPException(status_code=400, detail="Ação inválida. Use: approve ou reject")
+    
+    doc = await db.partner_documents.find_one({"document_id": doc_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
+    
+    new_status = "aprovado" if action == "approve" else "rejeitado"
+    
+    await db.partner_documents.update_one(
+        {"document_id": doc_id},
+        {"$set": {
+            "status": new_status,
+            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+            "reviewed_by": user_id,
+            "rejection_reason": reason if action == "reject" else None
+        }}
+    )
+    
+    # If all required docs are approved, activate partner
+    if action == "approve":
+        all_docs = await db.partner_documents.find({"partner_id": doc["partner_id"]}, {"_id": 0}).to_list(10)
+        all_approved = all(d.get("status") == "aprovado" or d.get("document_id") == doc_id for d in all_docs)
+        if all_approved and len(all_docs) >= 1:
+            await db.partners.update_one(
+                {"partner_id": doc["partner_id"]},
+                {"$set": {"status": "active", "verified": True, "verified_at": datetime.now(timezone.utc).isoformat()}}
+            )
+    
+    # Notify partner
+    from notifications_module import create_notification
+    await create_notification(
+        doc["user_id"],
+        f"Documento {new_status}",
+        f"O seu documento ({doc['doc_type'].upper()}) foi {new_status}." + (f" Motivo: {reason}" if reason else ""),
+        "partner",
+        doc_id
+    )
+    
+    return {"document_id": doc_id, "status": new_status}
+
+# ============ IVA TOGGLE ============
+
+@router.get("/iva-settings")
+async def get_iva_settings(request: Request):
+    """Obter configurações de IVA"""
+    await require_admin(request)
+    db = await get_db()
+    
+    config = await db.system_config.find_one({"config_id": "main"}, {"_id": 0})
+    iva_settings = config.get("iva_settings", {"enabled": False, "rate": 14.0}) if config else {"enabled": False, "rate": 14.0}
+    return iva_settings
+
+@router.put("/iva-settings")
+async def update_iva_settings(request: Request, iva_data: dict):
+    """Atualizar configurações de IVA"""
+    await require_admin(request, min_level=3)
+    db = await get_db()
+    
+    await db.system_config.update_one(
+        {"config_id": "main"},
+        {"$set": {"iva_settings": iva_data, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "IVA atualizado", "iva_settings": iva_data}
+
+# ============ REPORTS EXPORT ============
+
+@router.get("/reports/sales")
+async def get_sales_report(request: Request, period: str = "month"):
+    """Relatório de vendas"""
+    await require_admin(request)
+    db = await get_db()
+    
+    from datetime import timedelta
+    now = datetime.now(timezone.utc)
+    if period == "day":
+        start = now - timedelta(days=1)
+    elif period == "week":
+        start = now - timedelta(weeks=1)
+    else:
+        start = now - timedelta(days=30)
+    
+    start_iso = start.isoformat()
+    
+    orders = await db.orders.find({"created_at": {"$gte": start_iso}}, {"_id": 0}).to_list(10000)
+    payments = await db.payments.find({"created_at": {"$gte": start_iso}}, {"_id": 0}).to_list(10000)
+    
+    total_orders = len(orders)
+    total_revenue = sum(o.get("total", 0) for o in orders)
+    confirmed_payments = [p for p in payments if p.get("status") in ["confirmado", "verificado"]]
+    total_paid = sum(p.get("amount", 0) for p in confirmed_payments)
+    
+    # IVA calculation
+    config = await db.system_config.find_one({"config_id": "main"}, {"_id": 0})
+    iva_settings = config.get("iva_settings", {"enabled": False, "rate": 14.0}) if config else {"enabled": False, "rate": 14.0}
+    iva_amount = total_revenue * (iva_settings["rate"] / 100) if iva_settings["enabled"] else 0
+    
+    return {
+        "period": period,
+        "start_date": start_iso,
+        "end_date": now.isoformat(),
+        "orders": {"total": total_orders, "revenue": total_revenue},
+        "payments": {"total": len(payments), "confirmed": len(confirmed_payments), "total_paid": total_paid},
+        "iva": {"enabled": iva_settings["enabled"], "rate": iva_settings["rate"], "amount": iva_amount},
+        "commission": {"estimated": total_revenue * 0.10},
+        "data": {
+            "orders": orders[:100],
+            "payments": [{"payment_id": p["payment_id"], "amount": p["amount"], "status": p["status"], "created_at": p["created_at"]} for p in payments[:100]]
+        }
+    }

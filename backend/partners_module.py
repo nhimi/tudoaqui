@@ -377,3 +377,84 @@ async def approve_partner(request: Request, partner_id: str):
     )
     
     return {"partner_id": partner_id, "status": "active", "message": "Parceiro aprovado com sucesso"}
+
+@router.get("/analytics")
+async def get_partner_analytics(request: Request):
+    """Analytics detalhado do parceiro"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    pid = partner["partner_id"]
+    
+    # Services stats
+    total_services = await db.service_listings.count_documents({"partner_id": pid})
+    active_services = await db.service_listings.count_documents({"partner_id": pid, "status": "active"})
+    
+    # Transactions
+    transactions = await db.transactions.find({"partner_id": pid}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    
+    total_revenue = sum(t["amount"] for t in transactions if t.get("type") == "credit")
+    total_commission = sum(t["amount"] for t in transactions if t.get("type") == "commission")
+    
+    # Monthly breakdown (simulated from transactions)
+    monthly_data = {}
+    for t in transactions:
+        month = t.get("created_at", "")[:7]
+        if month not in monthly_data:
+            monthly_data[month] = {"revenue": 0, "orders": 0}
+        if t.get("type") == "credit":
+            monthly_data[month]["revenue"] += t["amount"]
+            monthly_data[month]["orders"] += 1
+    
+    # Reviews avg
+    services = await db.service_listings.find({"partner_id": pid}, {"_id": 0}).to_list(100)
+    
+    return {
+        "partner": partner,
+        "services": {"total": total_services, "active": active_services},
+        "revenue": {
+            "total": total_revenue,
+            "commission_paid": total_commission,
+            "net": total_revenue - total_commission,
+            "wallet_balance": partner.get("wallet_balance", 0)
+        },
+        "monthly": monthly_data,
+        "transactions": transactions[:20],
+        "tier_info": PARTNER_TIERS.get(partner.get("tier", "basico"), {})
+    }
+
+@router.put("/bank-details")
+async def update_partner_bank_details(request: Request, bank_data: dict):
+    """Parceiro atualiza seus dados bancários para receber pagamentos"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    await db.partners.update_one(
+        {"partner_id": partner["partner_id"]},
+        {"$set": {
+            "bank_details": bank_data,
+            "bank_details_updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Dados bancários atualizados", "bank_details": bank_data}
+
+@router.get("/bank-details")
+async def get_partner_bank_details(request: Request):
+    """Obter dados bancários do parceiro"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+    
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    return {"bank_details": partner.get("bank_details", {}), "partner_id": partner["partner_id"]}

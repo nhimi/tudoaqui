@@ -9,21 +9,24 @@ import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-export default function Profile({ user }) {
+export default function Profile() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [userTier, setUserTier] = useState('normal');
   const [tierInfo, setTierInfo] = useState(null);
   const [allTiers, setAllTiers] = useState({});
   const [upgrading, setUpgrading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchUserTier(); }, []);
+  useEffect(() => { fetchUserData(); }, []);
 
-  const fetchUserTier = async () => {
+  const fetchUserData = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/user/tier`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setUserTier(data.current_tier);
+      const userRes = await fetch(`${BACKEND_URL}/api/auth/me`, { credentials: 'include' });
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        setUser(userData);
+        setUserTier(userData.user_tier || 'normal');
       }
       const tiersRes = await fetch(`${BACKEND_URL}/api/partners/tiers`, { credentials: 'include' });
       if (tiersRes.ok) {
@@ -32,7 +35,9 @@ export default function Profile({ user }) {
         setTierInfo(tiersData.user_tiers || {});
       }
     } catch (err) {
-      console.error('Error fetching tier:', err);
+      console.error('Error fetching user:', err);
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -576,6 +576,28 @@ async def get_rides(request: Request):
     
     return rides
 
+@api_router.get("/restaurants/search")
+async def search_restaurants(request: Request, q: Optional[str] = None, cuisine: Optional[str] = None):
+    await get_current_user(request)
+    
+    query = {}
+    if q:
+        query["$or"] = [
+            {"name": {"$regex": q, "$options": "i"}},
+            {"description": {"$regex": q, "$options": "i"}},
+            {"cuisine_type": {"$regex": q, "$options": "i"}}
+        ]
+    if cuisine and cuisine != "all":
+        query["cuisine_type"] = {"$regex": cuisine, "$options": "i"}
+    
+    restaurants = await db.restaurants.find(query, {"_id": 0}).to_list(100)
+    
+    # Get unique cuisine types
+    all_restaurants = await db.restaurants.find({}, {"_id": 0, "cuisine_type": 1}).to_list(100)
+    cuisines = list(set(r["cuisine_type"] for r in all_restaurants))
+    
+    return {"restaurants": restaurants, "cuisines": cuisines}
+
 @api_router.get("/restaurants", response_model=List[Restaurant])
 async def get_restaurants(request: Request):
     await get_current_user(request)

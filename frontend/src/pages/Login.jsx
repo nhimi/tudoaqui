@@ -57,8 +57,9 @@ export default function Login() {
     <div className="mobile-container">
       <div className="min-h-screen bg-gradient-to-br from-[#F7F5F0] via-[#F7F5F0] to-[#FCBF49]/20 px-6 py-12 flex flex-col justify-center">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-[#1A1A1A] mb-2">Kandengue</h1>
+          <h1 className="text-4xl font-bold text-[#1A1A1A] mb-2">TudoAqui</h1>
           <p className="text-gray-600">Bem-vindo de volta</p>
+          <p className="text-xs text-gray-500 mt-1">by Sincesoft-Sinceridade Service</p>
         </div>
 
         <Card className="p-6 bg-white/95 backdrop-blur-sm border-black/5 rounded-2xl shadow-lg" data-testid="login-card">

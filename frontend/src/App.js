@@ -20,6 +20,7 @@ import Inquiries from './pages/Inquiries';
 import PartnerDashboard from './pages/PartnerDashboard';
 import PartnerRegister from './pages/PartnerRegister';
 import AccountingDashboard from './pages/AccountingDashboard';
+import JournalEntryForm from './pages/JournalEntryForm';
 import Profile from './pages/Profile';
 import '@/App.css';
 

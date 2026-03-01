@@ -1110,6 +1110,8 @@ app.include_router(accounting_router, prefix="/api")
 app.include_router(payments_router, prefix="/api")
 app.include_router(tourism_router, prefix="/api")
 app.include_router(properties_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
+app.include_router(notifications_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

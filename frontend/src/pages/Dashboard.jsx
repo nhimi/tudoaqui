@@ -143,6 +143,10 @@ export default function Dashboard({ user }) {
               <div className="w-10 h-10 bg-[#D62828]/10 rounded-lg flex items-center justify-center"><Briefcase size={20} className="text-[#D62828]" /></div>
               <div><p className="font-bold text-sm text-[#1A1A1A]">Meus Pedidos</p><p className="text-xs text-gray-500">Histórico</p></div>
             </Card>
+            <Card data-testid="referral-link" onClick={() => navigate('/referral')} className="p-4 bg-white border-black/5 rounded-xl shadow-sm hover-lift cursor-pointer flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#9333EA]/10 rounded-lg flex items-center justify-center"><Gift size={20} className="text-[#9333EA]" /></div>
+              <div><p className="font-bold text-sm text-[#1A1A1A]">Convidar Amigos</p><p className="text-xs text-gray-500">Ganhe descontos</p></div>
+            </Card>
             {user?.is_partner && (
               <Card data-testid="partner-analytics-link" onClick={() => navigate('/partner/analytics')} className="p-4 bg-white border-black/5 rounded-xl shadow-sm hover-lift cursor-pointer flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#2A9D8F]/10 rounded-lg flex items-center justify-center"><BarChart3 size={20} className="text-[#2A9D8F]" /></div>

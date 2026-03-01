@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from '../components/BottomNav';
-import { Car, UtensilsCrossed, TrendingUp, Package } from 'lucide-react';
+import { Car, UtensilsCrossed, MapPin, Building2 } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 
@@ -28,18 +28,18 @@ export default function Dashboard({ user }) {
     {
       title: 'Explorar Turismo',
       description: 'Hotéis, resorts e mais',
-      icon: TrendingUp,
+      icon: MapPin,
       color: '#2A9D8F',
       path: '/tourism',
       testId: 'dashboard-tourism-card'
     },
     {
-      title: 'Minhas Reservas',
-      description: 'Ver reservas turísticas',
-      icon: Package,
-      color: '#F4A261',
-      path: '/bookings',
-      testId: 'dashboard-bookings-card'
+      title: 'Encontrar Imóveis',
+      description: 'Casas, apartamentos',
+      icon: Building2,
+      color: '#9333EA',
+      path: '/properties',
+      testId: 'dashboard-properties-card'
     }
   ];
 

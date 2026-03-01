@@ -143,6 +143,24 @@ function AppRouter() {
       />
       
       <Route
+        path="/partner/register"
+        element={
+          <ProtectedRoute>
+            <PartnerRegister />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/partner/dashboard"
+        element={
+          <ProtectedRoute>
+            <PartnerDashboard />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
         path="/profile"
         element={
           <ProtectedRoute>

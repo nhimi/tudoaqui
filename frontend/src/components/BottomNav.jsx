@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Car, UtensilsCrossed, MapPin, User } from 'lucide-react';
+import { Home, Car, UtensilsCrossed, Building2, User } from 'lucide-react';
 
 export const BottomNav = () => {
   const location = useLocation();
@@ -11,7 +11,7 @@ export const BottomNav = () => {
     { path: '/dashboard', icon: Home, label: 'Início', testId: 'nav-home' },
     { path: '/taxi', icon: Car, label: 'Taxi', testId: 'nav-taxi' },
     { path: '/restaurants', icon: UtensilsCrossed, label: 'Comida', testId: 'nav-food' },
-    { path: '/tourism', icon: MapPin, label: 'Turismo', testId: 'nav-tourism' },
+    { path: '/properties', icon: Building2, label: 'Imóveis', testId: 'nav-properties' },
     { path: '/profile', icon: User, label: 'Perfil', testId: 'nav-profile' },
   ];
   

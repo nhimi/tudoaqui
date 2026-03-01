@@ -1,12 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNav } from '../components/BottomNav';
-import { Car, UtensilsCrossed, MapPin, Building2 } from 'lucide-react';
+import { Car, UtensilsCrossed, MapPin, Building2, Bell, Shield, BarChart3, Briefcase } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
 export default function Dashboard({ user }) {
   const navigate = useNavigate();
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
+
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/api/notifications/`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : { unread_count: 0 })
+      .then(d => setUnreadNotifs(d.unread_count || 0))
+      .catch(() => {});
+  }, []);
 
   const quickActions = [
     {

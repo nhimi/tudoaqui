@@ -1116,6 +1116,14 @@ async def get_user_tier(request: Request):
         "email": user.get("email", "")
     }
 
+@api_router.get("/settings/iva")
+async def get_public_iva_settings(request: Request):
+    """Obter configurações de IVA (público para checkout)"""
+    await get_current_user(request)
+    config = await db.system_config.find_one({"config_id": "main"}, {"_id": 0})
+    iva = config.get("iva_settings", {"enabled": False, "rate": 14.0}) if config else {"enabled": False, "rate": 14.0}
+    return iva
+
 app.include_router(api_router)
 app.include_router(partners_router, prefix="/api")
 app.include_router(accounting_router, prefix="/api")

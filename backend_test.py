@@ -502,6 +502,183 @@ class AngolaMarketplaceAPITester:
         self.log_test("Get Bookings", success, details)
         return success
         
+    def test_get_properties(self):
+        """Test properties listing endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/properties")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                if isinstance(data, list) and len(data) >= 8:
+                    # Check if we have the expected types
+                    types = set(prop.get('type') for prop in data)
+                    expected_types = {'apartamento', 'casa', 'terreno', 'comercial'}
+                    has_expected_types = expected_types.issubset(types)
+                    
+                    # Check transaction types
+                    transactions = set(prop.get('transaction_type') for prop in data)
+                    expected_transactions = {'venda', 'aluguel'}
+                    has_expected_transactions = expected_transactions.issubset(transactions)
+                    
+                    if has_expected_types and has_expected_transactions:
+                        details = f"Found {len(data)} properties with correct types and transactions"
+                    else:
+                        success = False
+                        details = f"Missing expected types or transactions. Types: {types}, Transactions: {transactions}"
+                else:
+                    success = False
+                    details = f"Expected at least 8 properties, got {len(data) if isinstance(data, list) else 0}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Get Properties", success, details)
+        return success
+        
+    def test_get_properties_filtered(self):
+        """Test properties filtered by type and transaction"""
+        try:
+            # Test filtering by type
+            response = self.session.get(f"{self.base_url}/api/properties?type=apartamento")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                if isinstance(data, list):
+                    # Check if all returned properties are apartments
+                    all_apartments = all(prop.get('type') == 'apartamento' for prop in data)
+                    if all_apartments and len(data) > 0:
+                        details = f"Found {len(data)} apartments filtered correctly"
+                    elif len(data) == 0:
+                        success = False
+                        details = "No apartments found in filter"
+                    else:
+                        success = False
+                        details = "Filter returned non-apartment properties"
+                else:
+                    success = False
+                    details = "Invalid response format"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Get Properties (Filtered)", success, details)
+        return success
+        
+    def test_get_property_detail(self):
+        """Test individual property detail endpoint"""
+        try:
+            # First get properties to get an ID
+            properties_response = self.session.get(f"{self.base_url}/api/properties")
+            if properties_response.status_code != 200:
+                self.log_test("Property Detail", False, "Could not fetch properties")
+                return False
+                
+            properties = properties_response.json()
+            if not properties:
+                self.log_test("Property Detail", False, "No properties available")
+                return False
+                
+            property_id = properties[0]['property_id']
+            
+            response = self.session.get(f"{self.base_url}/api/properties/{property_id}")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                required_fields = ['property_id', 'type', 'transaction_type', 'title', 'description', 'price', 'location', 'area', 'images', 'features', 'owner_name', 'owner_phone', 'status']
+                has_all_fields = all(field in data for field in required_fields)
+                
+                if has_all_fields:
+                    details = f"Property detail loaded: {data.get('title')} ({data.get('type')})"
+                else:
+                    success = False
+                    missing_fields = [field for field in required_fields if field not in data]
+                    details = f"Missing fields: {missing_fields}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Property Detail", success, details)
+        return success
+        
+    def test_create_property_inquiry(self):
+        """Test property inquiry creation endpoint"""
+        try:
+            # First get properties to get an ID
+            properties_response = self.session.get(f"{self.base_url}/api/properties")
+            if properties_response.status_code != 200:
+                self.log_test("Property Inquiry Creation", False, "Could not fetch properties")
+                return False
+                
+            properties = properties_response.json()
+            if not properties:
+                self.log_test("Property Inquiry Creation", False, "No properties available")
+                return False
+                
+            property_id = properties[0]['property_id']
+            
+            # Create inquiry
+            response = self.session.post(
+                f"{self.base_url}/api/property-inquiries",
+                json={
+                    "property_id": property_id,
+                    "message": "Tenho interesse neste imóvel. Gostaria de mais informações sobre preço e disponibilidade.",
+                    "phone": "+244912345678"
+                }
+            )
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                required_fields = ['inquiry_id', 'user_id', 'property_id', 'property_title', 'property_price', 'message', 'phone', 'status', 'created_at']
+                has_all_fields = all(field in data for field in required_fields)
+                
+                if has_all_fields:
+                    details = f"Property inquiry created: {data.get('inquiry_id')} - Status: {data.get('status')}"
+                else:
+                    success = False
+                    missing_fields = [field for field in required_fields if field not in data]
+                    details = f"Missing fields: {missing_fields}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Property Inquiry Creation", success, details)
+        return success
+        
+    def test_get_property_inquiries(self):
+        """Test get user property inquiries endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/property-inquiries")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                details = f"Found {len(data)} property inquiries for user"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Get Property Inquiries", success, details)
+        return success
+        
     def test_logout(self):
         """Test user logout endpoint"""
         try:

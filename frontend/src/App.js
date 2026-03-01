@@ -184,10 +184,37 @@ function AppRouter() {
       />
       
       <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/partner/analytics"
+        element={
+          <ProtectedRoute>
+            <PartnerAnalytics />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
         path="/profile"
         element={
           <ProtectedRoute>
-            <Profile />
+            <Profile user={user} />
           </ProtectedRoute>
         }
       />

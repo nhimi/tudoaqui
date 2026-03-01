@@ -19,6 +19,7 @@ import PropertyDetail from './pages/PropertyDetail';
 import Inquiries from './pages/Inquiries';
 import PartnerDashboard from './pages/PartnerDashboard';
 import PartnerRegister from './pages/PartnerRegister';
+import AccountingDashboard from './pages/AccountingDashboard';
 import Profile from './pages/Profile';
 import '@/App.css';
 

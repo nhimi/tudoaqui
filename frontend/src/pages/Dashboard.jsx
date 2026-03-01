@@ -26,20 +26,20 @@ export default function Dashboard({ user }) {
       testId: 'dashboard-food-card'
     },
     {
-      title: 'Minhas Corridas',
-      description: 'Histórico de viagens',
+      title: 'Explorar Turismo',
+      description: 'Hotéis, resorts e mais',
       icon: TrendingUp,
       color: '#2A9D8F',
-      path: '/taxi',
-      testId: 'dashboard-rides-card'
+      path: '/tourism',
+      testId: 'dashboard-tourism-card'
     },
     {
-      title: 'Meus Pedidos',
-      description: 'Ver pedidos anteriores',
+      title: 'Minhas Reservas',
+      description: 'Ver reservas turísticas',
       icon: Package,
       color: '#F4A261',
-      path: '/orders',
-      testId: 'dashboard-orders-card'
+      path: '/bookings',
+      testId: 'dashboard-bookings-card'
     }
   ];
 

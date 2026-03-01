@@ -1,17 +1,17 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Car, UtensilsCrossed, Wallet, User } from 'lucide-react';
+import { Home, Car, UtensilsCrossed, MapPin, User } from 'lucide-react';
 
 export const BottomNav = () => {
   const location = useLocation();
   
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
   
   const navItems = [
     { path: '/dashboard', icon: Home, label: 'Início', testId: 'nav-home' },
     { path: '/taxi', icon: Car, label: 'Taxi', testId: 'nav-taxi' },
     { path: '/restaurants', icon: UtensilsCrossed, label: 'Comida', testId: 'nav-food' },
-    { path: '/orders', icon: Wallet, label: 'Pedidos', testId: 'nav-orders' },
+    { path: '/tourism', icon: MapPin, label: 'Turismo', testId: 'nav-tourism' },
     { path: '/profile', icon: User, label: 'Perfil', testId: 'nav-profile' },
   ];
   

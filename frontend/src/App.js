@@ -21,6 +21,9 @@ import PartnerDashboard from './pages/PartnerDashboard';
 import PartnerRegister from './pages/PartnerRegister';
 import AccountingDashboard from './pages/AccountingDashboard';
 import JournalEntryForm from './pages/JournalEntryForm';
+import AdminDashboard from './pages/AdminDashboard';
+import PartnerAnalytics from './pages/PartnerAnalytics';
+import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import '@/App.css';
 

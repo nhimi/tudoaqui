@@ -114,6 +114,33 @@ function AppRouter() {
       />
       
       <Route
+        path="/properties"
+        element={
+          <ProtectedRoute>
+            <Properties />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/properties/:propertyId"
+        element={
+          <ProtectedRoute>
+            <PropertyDetail />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/inquiries"
+        element={
+          <ProtectedRoute>
+            <Inquiries />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
         path="/profile"
         element={
           <ProtectedRoute>

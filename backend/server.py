@@ -15,6 +15,9 @@ from jose import JWTError, jwt
 import httpx
 from partners_module import router as partners_router
 from accounting_module import router as accounting_router
+from payments_module import router as payments_router
+from tourism_router import router as tourism_router
+from properties_router import router as properties_router
 from fiscal_compliance import (
     calculate_iva, calculate_commission_with_taxes,
     calculate_retencao_na_fonte, calculate_imposto_industrial,

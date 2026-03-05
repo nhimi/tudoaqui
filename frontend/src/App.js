@@ -6,7 +6,12 @@ import { AuthCallback } from './components/AuthCallback';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import TaxiNew from './pages/TaxiNew';
+import TuendiHome from './pages/TuendiHome';
+import TuendiTracking from './pages/TuendiTracking';
+import TuendiDeliveryTracking from './pages/TuendiDeliveryTracking';
+import TuendiWallet from './pages/TuendiWallet';
+import TuendiHistory from './pages/TuendiHistory';
+import TuendiDriverRegister from './pages/TuendiDriverRegister';
 import Restaurants from './pages/Restaurants';
 import RestaurantMenu from './pages/RestaurantMenu';
 import Checkout from './pages/Checkout';
@@ -56,7 +61,61 @@ function AppRouter() {
         path="/taxi"
         element={
           <ProtectedRoute>
-            <TaxiNew />
+            <TuendiHome />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/tuendi"
+        element={
+          <ProtectedRoute>
+            <TuendiHome />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/tuendi/tracking/:rideId"
+        element={
+          <ProtectedRoute>
+            <TuendiTracking />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/tuendi/delivery-tracking/:deliveryId"
+        element={
+          <ProtectedRoute>
+            <TuendiDeliveryTracking />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/tuendi/wallet"
+        element={
+          <ProtectedRoute>
+            <TuendiWallet />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/tuendi/history"
+        element={
+          <ProtectedRoute>
+            <TuendiHistory />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/tuendi/driver-register"
+        element={
+          <ProtectedRoute>
+            <TuendiDriverRegister />
           </ProtectedRoute>
         }
       />

@@ -9,7 +9,7 @@ export const BottomNav = () => {
   
   const navItems = [
     { path: '/dashboard', icon: Home, label: 'Início', testId: 'nav-home' },
-    { path: '/taxi', icon: Car, label: 'Taxi', testId: 'nav-taxi' },
+    { path: '/tuendi', icon: Car, label: 'Tuendi', testId: 'nav-tuendi' },
     { path: '/restaurants', icon: UtensilsCrossed, label: 'Comida', testId: 'nav-food' },
     { path: '/properties', icon: Building2, label: 'Imóveis', testId: 'nav-properties' },
     { path: '/profile', icon: User, label: 'Perfil', testId: 'nav-profile' },

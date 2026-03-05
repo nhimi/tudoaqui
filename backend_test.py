@@ -678,7 +678,270 @@ class AngolaMarketplaceAPITester:
             
         self.log_test("Get Property Inquiries", success, details)
         return success
-        
+
+    def test_tuendi_config(self):
+        """Test Tuendi config endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/tuendi/config")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                
+                # Check required config fields
+                required_fields = ['vehicle_types', 'delivery_sizes', 'payment_methods', 'currency']
+                has_all_fields = all(field in data for field in required_fields)
+                
+                if has_all_fields:
+                    vehicle_count = len(data.get('vehicle_types', []))
+                    delivery_count = len(data.get('delivery_sizes', []))
+                    details = f"Config loaded: {vehicle_count} vehicle types, {delivery_count} delivery sizes"
+                else:
+                    success = False
+                    missing_fields = [field for field in required_fields if field not in data]
+                    details = f"Missing config fields: {missing_fields}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Tuendi Config", success, details)
+        return success
+
+    def test_tuendi_ride_estimate(self):
+        """Test Tuendi ride price estimation"""
+        try:
+            response = self.session.get(
+                f"{self.base_url}/api/tuendi/estimate/ride",
+                params={
+                    "pickup_lat": -8.8383,
+                    "pickup_lng": 13.2344,
+                    "dest_lat": -8.85,
+                    "dest_lng": 13.25
+                }
+            )
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                estimates = data.get('estimates', [])
+                
+                if len(estimates) >= 4:
+                    # Check vehicle types
+                    vehicle_types = [e.get('vehicle_type') for e in estimates]
+                    expected_types = ['moto', 'standard', 'comfort', 'premium']
+                    has_all_types = all(vtype in vehicle_types for vtype in expected_types)
+                    
+                    if has_all_types:
+                        prices = [e.get('price', 0) for e in estimates]
+                        details = f"Ride estimates: {len(estimates)} types, prices: {min(prices)}-{max(prices)} Kz"
+                    else:
+                        success = False
+                        details = f"Missing vehicle types. Found: {vehicle_types}"
+                else:
+                    success = False
+                    details = f"Expected 4 vehicle types, got {len(estimates)}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Tuendi Ride Estimate", success, details)
+        return success
+
+    def test_tuendi_create_ride(self):
+        """Test Tuendi ride creation"""
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/tuendi/rides",
+                json={
+                    "pickup_address": "Largo do Kinaxixi",
+                    "pickup_lat": -8.8383,
+                    "pickup_lng": 13.2344,
+                    "destination_address": "Marginal de Luanda",
+                    "dest_lat": -8.85,
+                    "dest_lng": 13.25,
+                    "vehicle_type": "standard",
+                    "payment_method": "wallet"
+                }
+            )
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                required_fields = ['ride_id', 'status', 'price', 'driver', 'pickup_address', 'destination_address']
+                has_all_fields = all(field in data for field in required_fields)
+                
+                if has_all_fields:
+                    details = f"Ride created: {data.get('ride_id')} - Status: {data.get('status')}, Price: {data.get('price')} Kz"
+                else:
+                    success = False
+                    missing_fields = [field for field in required_fields if field not in data]
+                    details = f"Missing ride fields: {missing_fields}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Tuendi Create Ride", success, details)
+        return success
+
+    def test_tuendi_get_rides(self):
+        """Test Tuendi get user rides"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/tuendi/rides")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                rides = data.get('rides', [])
+                details = f"Found {len(rides)} rides for user"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Tuendi Get Rides", success, details)
+        return success
+
+    def test_tuendi_create_delivery(self):
+        """Test Tuendi delivery creation"""
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/tuendi/deliveries",
+                json={
+                    "pickup_address": "Largo do Kinaxixi",
+                    "pickup_lat": -8.8383,
+                    "pickup_lng": 13.2344,
+                    "destination_address": "Talatona",
+                    "dest_lat": -8.9,
+                    "dest_lng": 13.2,
+                    "package_size": "small",
+                    "package_description": "Documentos",
+                    "recipient_name": "João Silva",
+                    "recipient_phone": "+244 923 456 789",
+                    "payment_method": "wallet"
+                }
+            )
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                required_fields = ['delivery_id', 'status', 'price', 'driver', 'package_description', 'recipient_name']
+                has_all_fields = all(field in data for field in required_fields)
+                
+                if has_all_fields:
+                    details = f"Delivery created: {data.get('delivery_id')} - Status: {data.get('status')}, Price: {data.get('price')} Kz"
+                else:
+                    success = False
+                    missing_fields = [field for field in required_fields if field not in data]
+                    details = f"Missing delivery fields: {missing_fields}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Tuendi Create Delivery", success, details)
+        return success
+
+    def test_tuendi_get_wallet(self):
+        """Test Tuendi wallet balance"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/tuendi/wallet")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                
+                # Check required wallet fields
+                required_fields = ['balance', 'transactions']
+                has_all_fields = all(field in data for field in required_fields)
+                
+                if has_all_fields:
+                    balance = data.get('balance', 0)
+                    transactions_count = len(data.get('transactions', []))
+                    details = f"Wallet balance: {balance} Kz, {transactions_count} transactions"
+                else:
+                    success = False
+                    missing_fields = [field for field in required_fields if field not in data]
+                    details = f"Missing wallet fields: {missing_fields}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Tuendi Get Wallet", success, details)
+        return success
+
+    def test_tuendi_wallet_topup(self):
+        """Test Tuendi wallet top-up"""
+        try:
+            response = self.session.post(
+                f"{self.base_url}/api/tuendi/wallet/topup",
+                json={
+                    "amount": 5000,
+                    "payment_reference": "REF123456"
+                }
+            )
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                
+                # Check required response fields
+                required_fields = ['balance', 'transaction_id']
+                has_all_fields = all(field in data for field in required_fields)
+                
+                if has_all_fields:
+                    balance = data.get('balance', 0)
+                    transaction_id = data.get('transaction_id')
+                    details = f"Wallet topped up: New balance {balance} Kz, Transaction: {transaction_id}"
+                else:
+                    success = False
+                    missing_fields = [field for field in required_fields if field not in data]
+                    details = f"Missing topup response fields: {missing_fields}"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Tuendi Wallet TopUp", success, details)
+        return success
+
+    def test_tuendi_get_history(self):
+        """Test Tuendi full history"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/tuendi/history")
+            
+            success = response.status_code == 200
+            if success:
+                data = response.json()
+                history = data.get('history', [])
+                details = f"Found {len(history)} items in history"
+            else:
+                details = f"Status {response.status_code}: {response.text}"
+                
+        except Exception as e:
+            success = False
+            details = str(e)
+            
+        self.log_test("Tuendi Get History", success, details)
+        return success
+
     def test_logout(self):
         """Test user logout endpoint"""
         try:
@@ -724,6 +987,15 @@ class AngolaMarketplaceAPITester:
             self.test_get_property_detail,
             self.test_create_property_inquiry,
             self.test_get_property_inquiries,
+            # Tuendi module tests
+            self.test_tuendi_config,
+            self.test_tuendi_ride_estimate,
+            self.test_tuendi_create_ride,
+            self.test_tuendi_get_rides,
+            self.test_tuendi_create_delivery,
+            self.test_tuendi_get_wallet,
+            self.test_tuendi_wallet_topup,
+            self.test_tuendi_get_history,
             self.test_logout
         ]
         

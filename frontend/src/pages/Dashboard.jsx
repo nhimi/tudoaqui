@@ -20,12 +20,12 @@ export default function Dashboard({ user }) {
 
   const quickActions = [
     {
-      title: 'Solicitar Taxi',
-      description: 'Compare preços e escolha',
+      title: 'Tuendi',
+      description: 'Viagens e entregas rápidas',
       icon: Car,
-      color: '#D62828',
-      path: '/taxi',
-      testId: 'dashboard-taxi-card'
+      color: '#0D9488',
+      path: '/tuendi',
+      testId: 'dashboard-tuendi-card'
     },
     {
       title: 'Pedir Comida',
@@ -112,14 +112,14 @@ export default function Dashboard({ user }) {
           <Card className="p-6 bg-gradient-to-br from-[#FCBF49] to-[#FCBF49]/80 border-none rounded-2xl text-[#1A1A1A]">
             <h3 className="font-bold text-lg mb-2">Promoção Especial!</h3>
             <p className="text-sm mb-4 opacity-90">
-              Primeira corrida com 20% de desconto. Use o código <span className="font-bold">TUDOAQUI20</span>
+              Primeira corrida com 20% de desconto. Use o código <span className="font-bold">TUENDI20</span>
             </p>
             <Button 
               data-testid="promo-cta-btn"
-              onClick={() => navigate('/taxi')}
+              onClick={() => navigate('/tuendi')}
               className="bg-[#1A1A1A] hover:bg-[#1A1A1A]/90 text-white font-semibold h-10 rounded-lg"
             >
-              Solicitar Agora
+              Pedir Tuendi
             </Button>
           </Card>
 

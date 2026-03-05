@@ -23,7 +23,8 @@ export const ProtectedRoute = ({ children }) => {
         if (!response.ok) throw new Error('Not authenticated');
         
         const data = await response.json();
-        setUser(data);
+        // auth_module returns { user: {...}, tier_info: {...} }
+        setUser(data.user || data);
         setIsAuthenticated(true);
       } catch (error) {
         setIsAuthenticated(false);

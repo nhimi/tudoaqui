@@ -13,6 +13,7 @@ import uuid
 import os
 import random
 import string
+import httpx
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -102,6 +103,9 @@ class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str = Field(min_length=6)
 
+class SessionData(BaseModel):
+    session_id: str
+
 class ProfileUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
@@ -173,7 +177,7 @@ async def get_current_user(request: Request) -> dict:
     except JWTError:
         raise HTTPException(status_code=401, detail="Token expirado ou inválido")
     
-    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password": 0})
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password": 0, "password_hash": 0, "verification_code": 0})
     if user is None:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
     
@@ -303,7 +307,7 @@ async def login(request: Request, response: Response, login_data: UserLogin):
     if not user:
         raise HTTPException(status_code=401, detail="Email ou senha incorretos")
     
-    if not verify_password(login_data.password, user["password"]):
+    if not verify_password(login_data.password, user.get("password") or user.get("password_hash", "")):
         raise HTTPException(status_code=401, detail="Email ou senha incorretos")
     
     if not user.get("is_active", True):
@@ -359,7 +363,115 @@ async def logout(response: Response):
     """Logout user"""
     response.delete_cookie("access_token")
     response.delete_cookie("user_id")
+    response.delete_cookie("session_token")
     return {"message": "Logout efetuado com sucesso"}
+
+@router.post("/session")
+async def exchange_session(request: Request, response: Response, session_data: SessionData):
+    """Exchange Emergent OAuth session for app JWT token"""
+    db = request.app.state.db
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            emergent_response = await client.get(
+                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+                headers={"X-Session-ID": session_data.session_id},
+                timeout=10.0
+            )
+            if emergent_response.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid session_id")
+            user_data = emergent_response.json()
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="Failed to authenticate with Emergent")
+    
+    email = user_data["email"].lower()
+    existing_user = await db.users.find_one({"email": email}, {"_id": 0})
+    
+    if existing_user:
+        user_id = existing_user["user_id"]
+        await db.users.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "name": user_data.get("name", existing_user.get("name", "")),
+                "picture": user_data.get("picture", existing_user.get("picture")),
+                "last_login": datetime.utcnow().isoformat()
+            }}
+        )
+    else:
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        user_doc = {
+            "user_id": user_id,
+            "email": email,
+            "password": "",
+            "name": user_data.get("name", ""),
+            "picture": user_data.get("picture"),
+            "phone": None,
+            "role": UserRole.USER,
+            "roles": [UserRole.USER],
+            "tier": UserTier.BRONZE,
+            "points": 100,
+            "total_orders": 0,
+            "total_spent": 0,
+            "email_verified": True,
+            "phone_verified": False,
+            "profile": {
+                "address": None,
+                "city": "Luanda",
+                "province": "Luanda",
+                "birth_date": None,
+                "gender": None,
+                "avatar": user_data.get("picture"),
+                "preferred_language": "pt"
+            },
+            "notification_settings": {
+                "push": True,
+                "email": True,
+                "sms": False,
+                "promotions": True,
+                "order_updates": True
+            },
+            "referral_code": f"TUDO{user_id[-6:].upper()}",
+            "referred_by": None,
+            "is_active": True,
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+            "last_login": datetime.utcnow().isoformat()
+        }
+        await db.users.insert_one(user_doc)
+    
+    # Generate JWT
+    access_token = create_access_token(data={
+        "user_id": user_id,
+        "email": email,
+        "role": UserRole.USER
+    })
+    
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=60 * 60 * 24 * 7
+    )
+    response.set_cookie(
+        key="user_id",
+        value=user_id,
+        httponly=False,
+        secure=True,
+        samesite="none",
+        max_age=60 * 60 * 24 * 7
+    )
+    
+    user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password": 0, "verification_code": 0})
+    
+    return {
+        "message": "Login via Google efetuado!",
+        "user": user_doc,
+        "token": access_token
+    }
 
 @router.get("/me")
 async def get_me(request: Request):
@@ -397,6 +509,18 @@ async def get_me(request: Request):
         "user_id": user["user_id"],
         "read": False
     })
+    
+    # Check partner status
+    partner = await db.partners.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    user["is_partner"] = partner is not None
+    user["partner_id"] = partner.get("partner_id") if partner else None
+    user["partner_tier"] = partner.get("tier") if partner else None
+    
+    # Map admin_role for backward compat
+    if user.get("role") in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        user["admin_role"] = user.get("role")
+    elif not user.get("admin_role"):
+        user["admin_role"] = None
     
     return {
         "user": user,

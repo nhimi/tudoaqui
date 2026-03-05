@@ -38,10 +38,11 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 app = FastAPI()
+app.state.db = db
 api_router = APIRouter(prefix="/api")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "kandengue-secret-key-change-in-production")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "tudoaqui-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 
@@ -210,230 +211,43 @@ class Order(BaseModel):
     created_at: str
 
 async def get_current_user(request: Request) -> str:
-    session_token = request.cookies.get("session_token")
-    
-    if not session_token:
+    # Try JWT access_token first (primary auth system)
+    access_token = request.cookies.get("access_token")
+    if not access_token:
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
-            session_token = auth_header.split(" ")[1]
+            access_token = auth_header.split(" ")[1]
     
-    if not session_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    session_doc = await db.user_sessions.find_one(
-        {"session_token": session_token},
-        {"_id": 0}
-    )
-    
-    if not session_doc:
-        raise HTTPException(status_code=401, detail="Invalid session")
-    
-    expires_at = session_doc["expires_at"]
-    if isinstance(expires_at, str):
-        expires_at = datetime.fromisoformat(expires_at)
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    
-    if expires_at < datetime.now(timezone.utc):
-        await db.user_sessions.delete_one({"session_token": session_token})
-        raise HTTPException(status_code=401, detail="Session expired")
-    
-    return session_doc["user_id"]
-
-@api_router.post("/auth/register")
-async def register(user_data: UserRegister, response: Response):
-    existing_user = await db.users.find_one({"email": user_data.email})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email já registrado")
-    
-    user_id = f"user_{uuid.uuid4().hex[:12]}"
-    hashed_password = pwd_context.hash(user_data.password)
-    
-    user_doc = {
-        "user_id": user_id,
-        "email": user_data.email,
-        "name": user_data.name,
-        "password_hash": hashed_password,
-        "phone": user_data.phone,
-        "picture": None,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    
-    await db.users.insert_one(user_doc)
-    
-    session_token = f"session_{uuid.uuid4().hex}"
-    expires_at = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
-    
-    await db.user_sessions.insert_one({
-        "user_id": user_id,
-        "session_token": session_token,
-        "expires_at": expires_at,
-        "created_at": datetime.now(timezone.utc)
-    })
-    
-    response.set_cookie(
-        key="session_token",
-        value=session_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-        path="/"
-    )
-    
-    return {
-        "user": {
-            "user_id": user_id,
-            "email": user_data.email,
-            "name": user_data.name,
-            "picture": None,
-            "phone": user_data.phone
-        }
-    }
-
-@api_router.post("/auth/login")
-async def login(credentials: UserLogin, response: Response):
-    user_doc = await db.users.find_one({"email": credentials.email})
-    
-    if not user_doc or not pwd_context.verify(credentials.password, user_doc.get("password_hash", "")):
-        raise HTTPException(status_code=401, detail="Email ou senha inválidos")
-    
-    session_token = f"session_{uuid.uuid4().hex}"
-    expires_at = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
-    
-    await db.user_sessions.insert_one({
-        "user_id": user_doc["user_id"],
-        "session_token": session_token,
-        "expires_at": expires_at,
-        "created_at": datetime.now(timezone.utc)
-    })
-    
-    response.set_cookie(
-        key="session_token",
-        value=session_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-        path="/"
-    )
-    
-    return {
-        "user": {
-            "user_id": user_doc["user_id"],
-            "email": user_doc["email"],
-            "name": user_doc["name"],
-            "picture": user_doc.get("picture"),
-            "phone": user_doc.get("phone")
-        }
-    }
-
-@api_router.post("/auth/session")
-async def exchange_session(session_data: SessionData, response: Response):
-    async with httpx.AsyncClient() as client:
+    if access_token:
         try:
-            emergent_response = await client.get(
-                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-                headers={"X-Session-ID": session_data.session_id},
-                timeout=10.0
-            )
-            
-            if emergent_response.status_code != 200:
-                raise HTTPException(status_code=401, detail="Invalid session_id")
-            
-            user_data = emergent_response.json()
-            
-        except Exception as e:
-            logger.error(f"Error exchanging session: {e}")
-            raise HTTPException(status_code=500, detail="Failed to authenticate with Emergent")
+            payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("user_id")
+            if user_id:
+                return user_id
+        except JWTError:
+            pass
     
-    existing_user = await db.users.find_one({"email": user_data["email"]}, {"_id": 0})
-    
-    if existing_user:
-        user_id = existing_user["user_id"]
-        await db.users.update_one(
-            {"user_id": user_id},
-            {"$set": {
-                "name": user_data.get("name", existing_user["name"]),
-                "picture": user_data.get("picture", existing_user.get("picture"))
-            }}
-        )
-    else:
-        user_id = f"user_{uuid.uuid4().hex[:12]}"
-        await db.users.insert_one({
-            "user_id": user_id,
-            "email": user_data["email"],
-            "name": user_data.get("name", ""),
-            "picture": user_data.get("picture"),
-            "phone": None,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
-    
-    session_token = user_data["session_token"]
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
-    
-    await db.user_sessions.insert_one({
-        "user_id": user_id,
-        "session_token": session_token,
-        "expires_at": expires_at,
-        "created_at": datetime.now(timezone.utc)
-    })
-    
-    response.set_cookie(
-        key="session_token",
-        value=session_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=7 * 24 * 60 * 60,
-        path="/"
-    )
-    
-    user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
-    
-    return {
-        "user": {
-            "user_id": user_doc["user_id"],
-            "email": user_doc["email"],
-            "name": user_doc["name"],
-            "picture": user_doc.get("picture"),
-            "phone": user_doc.get("phone")
-        }
-    }
-
-@api_router.get("/auth/me")
-async def get_me(request: Request):
-    user_id = await get_current_user(request)
-    user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
-    
-    if not user_doc:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Check if user is a partner
-    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
-    
-    return {
-        "user_id": user_doc["user_id"],
-        "email": user_doc["email"],
-        "name": user_doc["name"],
-        "picture": user_doc.get("picture"),
-        "phone": user_doc.get("phone"),
-        "user_tier": user_doc.get("user_tier", "normal"),
-        "admin_role": user_doc.get("admin_role"),
-        "is_partner": partner is not None,
-        "partner_id": partner.get("partner_id") if partner else None,
-        "partner_tier": partner.get("tier") if partner else None
-    }
-
-@api_router.post("/auth/logout")
-async def logout(request: Request, response: Response):
+    # Fallback to session_token (legacy/Google OAuth sessions)
     session_token = request.cookies.get("session_token")
-    
     if session_token:
-        await db.user_sessions.delete_one({"session_token": session_token})
+        session_doc = await db.user_sessions.find_one(
+            {"session_token": session_token},
+            {"_id": 0}
+        )
+        if session_doc:
+            expires_at = session_doc["expires_at"]
+            if isinstance(expires_at, str):
+                expires_at = datetime.fromisoformat(expires_at)
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at >= datetime.now(timezone.utc):
+                return session_doc["user_id"]
+            else:
+                await db.user_sessions.delete_one({"session_token": session_token})
     
-    response.delete_cookie(key="session_token", path="/")
-    return {"message": "Logged out successfully"}
+    raise HTTPException(status_code=401, detail="Not authenticated")
+
+# Auth routes handled by auth_module.py (register, login, session, me, logout, profile, etc.)
 
 
 @api_router.get("/taxi/connected-apps")

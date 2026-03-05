@@ -32,11 +32,9 @@ class WalletPayment(BaseModel):
 # ==================== HELPER FUNCTIONS ====================
 
 async def get_current_user_id(request: Request) -> str:
-    """Get current user ID from request"""
-    user_id = request.cookies.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Não autenticado")
-    return user_id
+    """Get current user ID from request using server auth"""
+    from server import get_current_user
+    return await get_current_user(request)
 
 async def get_or_create_wallet(db, user_id: str) -> dict:
     """Get or create user wallet"""

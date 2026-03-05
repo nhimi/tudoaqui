@@ -1034,3 +1034,270 @@ async def admin_get_stats(request: Request):
         "total_revenue": total_revenue,
         "platform_fee": int(total_revenue * 0.2),  # 20% platform fee
     }
+
+
+# ---------- CHAT MESSAGES ----------
+
+class ChatMessage(BaseModel):
+    ride_id: Optional[str] = None
+    delivery_id: Optional[str] = None
+    message: str
+    is_driver: bool = False
+
+@router.post("/chat/send")
+async def send_chat_message(request: Request, msg_data: ChatMessage):
+    """Send a chat message"""
+    db = await get_db()
+    user_id = await get_current_user(request)
+    
+    message_id = f"msg_{uuid.uuid4().hex[:10]}"
+    message_doc = {
+        "message_id": message_id,
+        "ride_id": msg_data.ride_id,
+        "delivery_id": msg_data.delivery_id,
+        "user_id": user_id,
+        "message": msg_data.message,
+        "is_driver": msg_data.is_driver,
+        "read": False,
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    
+    await db.tuendi_chat.insert_one(message_doc)
+    message_doc.pop("_id", None)
+    
+    return message_doc
+
+@router.get("/chat/{ride_or_delivery_id}")
+async def get_chat_messages(request: Request, ride_or_delivery_id: str):
+    """Get chat messages for a ride or delivery"""
+    db = await get_db()
+    
+    messages = await db.tuendi_chat.find({
+        "$or": [
+            {"ride_id": ride_or_delivery_id},
+            {"delivery_id": ride_or_delivery_id}
+        ]
+    }, {"_id": 0}).sort("created_at", 1).to_list(100)
+    
+    return {"messages": messages}
+
+@router.patch("/chat/{message_id}/read")
+async def mark_message_read(request: Request, message_id: str):
+    """Mark a message as read"""
+    db = await get_db()
+    
+    await db.tuendi_chat.update_one(
+        {"message_id": message_id},
+        {"$set": {"read": True}}
+    )
+    
+    return {"message_id": message_id, "read": True}
+
+# ---------- NOTIFICATIONS ----------
+
+class TuendiNotification(BaseModel):
+    title: str
+    message: str
+    type: str = "info"  # info, success, warning, ride_update, delivery_update
+    ride_id: Optional[str] = None
+    delivery_id: Optional[str] = None
+
+@router.get("/notifications")
+async def get_tuendi_notifications(request: Request, limit: int = 20):
+    """Get user's Tuendi notifications"""
+    db = await get_db()
+    user_id = await get_current_user(request)
+    
+    notifications = await db.tuendi_notifications.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    unread_count = await db.tuendi_notifications.count_documents({
+        "user_id": user_id,
+        "read": False
+    })
+    
+    return {
+        "notifications": notifications,
+        "unread_count": unread_count
+    }
+
+@router.post("/notifications")
+async def create_notification(request: Request, notif_data: TuendiNotification):
+    """Create a notification (internal use)"""
+    db = await get_db()
+    user_id = await get_current_user(request)
+    
+    notif_id = f"notif_{uuid.uuid4().hex[:10]}"
+    notif_doc = {
+        "notification_id": notif_id,
+        "user_id": user_id,
+        "title": notif_data.title,
+        "message": notif_data.message,
+        "type": notif_data.type,
+        "ride_id": notif_data.ride_id,
+        "delivery_id": notif_data.delivery_id,
+        "read": False,
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    
+    await db.tuendi_notifications.insert_one(notif_doc)
+    notif_doc.pop("_id", None)
+    
+    return notif_doc
+
+@router.patch("/notifications/{notification_id}/read")
+async def mark_notification_read(request: Request, notification_id: str):
+    """Mark notification as read"""
+    db = await get_db()
+    
+    await db.tuendi_notifications.update_one(
+        {"notification_id": notification_id},
+        {"$set": {"read": True, "read_at": datetime.utcnow().isoformat()}}
+    )
+    
+    return {"notification_id": notification_id, "read": True}
+
+@router.patch("/notifications/read-all")
+async def mark_all_notifications_read(request: Request):
+    """Mark all notifications as read"""
+    db = await get_db()
+    user_id = await get_current_user(request)
+    
+    result = await db.tuendi_notifications.update_many(
+        {"user_id": user_id, "read": False},
+        {"$set": {"read": True, "read_at": datetime.utcnow().isoformat()}}
+    )
+    
+    return {"marked_read": result.modified_count}
+
+# ---------- FAVORITES ----------
+
+@router.post("/favorites/place")
+async def add_favorite_place(request: Request, place_data: dict):
+    """Add a favorite place"""
+    db = await get_db()
+    user_id = await get_current_user(request)
+    
+    favorite_id = f"fav_{uuid.uuid4().hex[:10]}"
+    favorite_doc = {
+        "favorite_id": favorite_id,
+        "user_id": user_id,
+        "name": place_data.get("name"),
+        "address": place_data.get("address"),
+        "lat": place_data.get("lat"),
+        "lng": place_data.get("lng"),
+        "type": place_data.get("type", "other"),  # home, work, other
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    
+    await db.tuendi_favorites.insert_one(favorite_doc)
+    favorite_doc.pop("_id", None)
+    
+    return favorite_doc
+
+@router.get("/favorites/places")
+async def get_favorite_places(request: Request):
+    """Get user's favorite places"""
+    db = await get_db()
+    user_id = await get_current_user(request)
+    
+    favorites = await db.tuendi_favorites.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).to_list(20)
+    
+    return {"favorites": favorites}
+
+@router.delete("/favorites/{favorite_id}")
+async def remove_favorite(request: Request, favorite_id: str):
+    """Remove a favorite place"""
+    db = await get_db()
+    user_id = await get_current_user(request)
+    
+    await db.tuendi_favorites.delete_one({
+        "favorite_id": favorite_id,
+        "user_id": user_id
+    })
+    
+    return {"deleted": True}
+
+# ---------- SCHEDULED RIDES ----------
+
+class ScheduledRide(BaseModel):
+    pickup_address: str
+    pickup_lat: float
+    pickup_lng: float
+    destination_address: str
+    dest_lat: float
+    dest_lng: float
+    vehicle_type: str = "standard"
+    scheduled_time: str  # ISO datetime
+    notes: Optional[str] = None
+
+@router.post("/rides/schedule")
+async def schedule_ride(request: Request, ride_data: ScheduledRide):
+    """Schedule a ride for later"""
+    db = await get_db()
+    user_id = await get_current_user(request)
+    
+    # Calculate estimated price
+    distance_km = calculate_distance(
+        ride_data.pickup_lat, ride_data.pickup_lng,
+        ride_data.dest_lat, ride_data.dest_lng
+    )
+    vehicle_type = VehicleType(ride_data.vehicle_type)
+    duration_min = estimate_duration(distance_km, vehicle_type)
+    price = calculate_ride_price(distance_km, duration_min, vehicle_type)
+    
+    schedule_id = f"scheduled_{uuid.uuid4().hex[:10]}"
+    schedule_doc = {
+        "schedule_id": schedule_id,
+        "user_id": user_id,
+        "pickup_address": ride_data.pickup_address,
+        "pickup_lat": ride_data.pickup_lat,
+        "pickup_lng": ride_data.pickup_lng,
+        "destination_address": ride_data.destination_address,
+        "dest_lat": ride_data.dest_lat,
+        "dest_lng": ride_data.dest_lng,
+        "vehicle_type": ride_data.vehicle_type,
+        "scheduled_time": ride_data.scheduled_time,
+        "estimated_price": price,
+        "distance_km": distance_km,
+        "duration_min": duration_min,
+        "notes": ride_data.notes,
+        "status": "scheduled",  # scheduled, confirmed, cancelled
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    
+    await db.tuendi_scheduled.insert_one(schedule_doc)
+    schedule_doc.pop("_id", None)
+    
+    return schedule_doc
+
+@router.get("/rides/scheduled")
+async def get_scheduled_rides(request: Request):
+    """Get user's scheduled rides"""
+    db = await get_db()
+    user_id = await get_current_user(request)
+    
+    scheduled = await db.tuendi_scheduled.find(
+        {"user_id": user_id, "status": "scheduled"},
+        {"_id": 0}
+    ).sort("scheduled_time", 1).to_list(20)
+    
+    return {"scheduled_rides": scheduled}
+
+@router.delete("/rides/scheduled/{schedule_id}")
+async def cancel_scheduled_ride(request: Request, schedule_id: str):
+    """Cancel a scheduled ride"""
+    db = await get_db()
+    user_id = await get_current_user(request)
+    
+    await db.tuendi_scheduled.update_one(
+        {"schedule_id": schedule_id, "user_id": user_id},
+        {"$set": {"status": "cancelled", "cancelled_at": datetime.utcnow().isoformat()}}
+    )
+    
+    return {"schedule_id": schedule_id, "status": "cancelled"}

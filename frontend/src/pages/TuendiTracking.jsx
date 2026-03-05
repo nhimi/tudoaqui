@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { MapPin, Navigation, Phone, User, Car, Star, CheckCircle, XCircle, MessageCircle, Clock, CreditCard, ArrowLeft, Share2, Shield, Bike, Crown, CarFront } from 'lucide-react';
 import { toast } from 'sonner';
 import { TaxiMap } from '../components/TaxiMap';
+import { TuendiChat } from '../components/TuendiChat';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -37,6 +38,7 @@ export default function TuendiTracking() {
   const [comment, setComment] = useState('');
   const [showCancel, setShowCancel] = useState(false);
   const [selectedTags, setSelectedTags] = useState([]);
+  const [showChat, setShowChat] = useState(false);
 
   const RATING_TAGS = ['Educado', 'Pontual', 'Carro limpo', 'Direção segura', 'Conhece a cidade'];
 
@@ -234,7 +236,7 @@ export default function TuendiTracking() {
                   <a href={`tel:${ride.driver.phone}`} className="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center hover:bg-green-200 transition-colors">
                     <Phone size={20} className="text-green-600" />
                   </a>
-                  <button className="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center hover:bg-blue-200 transition-colors">
+                  <button onClick={() => setShowChat(true)} className="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center hover:bg-blue-200 transition-colors">
                     <MessageCircle size={20} className="text-blue-600" />
                   </button>
                 </div>
@@ -478,6 +480,19 @@ export default function TuendiTracking() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Chat Modal */}
+      {showChat && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+          <div className="w-full max-w-md">
+            <TuendiChat 
+              rideId={rideId}
+              driverName={ride?.driver?.name}
+              onClose={() => setShowChat(false)}
+            />
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>

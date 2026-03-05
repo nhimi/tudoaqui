@@ -22,6 +22,8 @@ from admin_module import router as admin_router
 from notifications_module import router as notifications_router
 from referral_module import router as referral_router
 from tuendi_module import router as tuendi_router
+from auth_module import router as auth_router
+from wallet_module import router as wallet_router
 from fiscal_compliance import (
     calculate_iva, calculate_commission_with_taxes,
     calculate_retencao_na_fonte, calculate_imposto_industrial,
@@ -1135,6 +1137,8 @@ app.include_router(admin_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
 app.include_router(referral_router, prefix="/api")
 app.include_router(tuendi_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
+app.include_router(wallet_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

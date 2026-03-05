@@ -1,11 +1,12 @@
 """
-Módulo de Pagamentos por Transferência Bancária
-Sistema temporário com código de confirmação
+Módulo de Pagamentos - TudoAqui
+Gateway simulado: Multicaixa Express, Unitel Money, BAI Paga, Transferência Bancária
+Fluxo completo: selecionar método → gerar referência → confirmar com código
 """
 
 from fastapi import APIRouter, HTTPException, Request
 from motor.motor_asyncio import AsyncIOMotorClient
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 import uuid
 import os
@@ -14,43 +15,76 @@ import string
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
-# Dados bancários de exemplo para transferência
-BANK_ACCOUNTS = {
-    "multicaixa": {
-        "bank": "Banco BAI",
-        "account_name": "TudoAqui Marketplace LDA",
-        "iban": "AO06 0040 0000 8574 3210 1018 7",
-        "account_number": "857432101018",
-        "nif": "5417892301",
-        "swift": "BAIAAOLU"
-    },
-    "bai_paga": {
-        "bank": "Banco BAI",
-        "account_name": "TudoAqui Marketplace LDA",
-        "iban": "AO06 0040 0000 8574 3210 1018 7",
-        "account_number": "857432101018",
-        "nif": "5417892301",
-        "swift": "BAIAAOLU"
+PAYMENT_METHODS = {
+    "multicaixa_express": {
+        "name": "Multicaixa Express",
+        "icon": "credit-card",
+        "description": "Pagamento por referência Multicaixa",
+        "bank": "EMIS / Rede Multicaixa",
+        "instructions": [
+            "1. Abra o app do seu banco ou ATM",
+            "2. Selecione 'Pagamento de Serviços'",
+            "3. Insira a Entidade e Referência abaixo",
+            "4. Confirme o valor e pague",
+            "5. Use o código de confirmação para validar"
+        ],
+        "entity": "50123",
+        "processing_time": "Instantâneo"
     },
     "unitel_money": {
-        "bank": "Unitel Money",
-        "account_name": "TudoAqui Marketplace",
+        "name": "Unitel Money",
+        "icon": "smartphone",
+        "description": "Pagamento via Unitel Money",
         "phone": "+244 923 456 789",
-        "nif": "5417892301"
+        "instructions": [
+            "1. Abra o Unitel Money no seu telefone",
+            "2. Selecione 'Transferir'",
+            "3. Insira o número: +244 923 456 789",
+            "4. Insira o valor e a referência abaixo",
+            "5. Confirme e use o código para validar"
+        ],
+        "processing_time": "Instantâneo"
+    },
+    "bai_paga": {
+        "name": "BAI Paga",
+        "icon": "qr-code",
+        "description": "Pagamento via BAI Paga (QR Code)",
+        "bank": "Banco BAI",
+        "instructions": [
+            "1. Abra o app BAI Paga",
+            "2. Selecione 'Pagar com QR Code'",
+            "3. Escaneie o QR code ou insira a referência",
+            "4. Confirme o valor",
+            "5. Use o código para validar"
+        ],
+        "iban": "AO06 0040 0000 8574 3210 1018 7",
+        "processing_time": "1-5 minutos"
     },
     "transferencia": {
+        "name": "Transferência Bancária",
+        "icon": "building",
+        "description": "Transferência directa para conta TudoAqui",
         "bank": "Banco BAI",
         "account_name": "TudoAqui Marketplace LDA",
         "iban": "AO06 0040 0000 8574 3210 1018 7",
         "account_number": "857432101018",
         "nif": "5417892301",
-        "swift": "BAIAAOLU"
+        "swift": "BAIAAOLU",
+        "instructions": [
+            "1. Acesse o Internet Banking ou vá ao banco",
+            "2. Faça transferência para os dados abaixo",
+            "3. Inclua a referência do pagamento",
+            "4. Use o código de confirmação para validar"
+        ],
+        "processing_time": "1-24 horas"
     }
 }
 
 def generate_confirmation_code():
-    """Gerar código de confirmação único de 8 caracteres"""
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+def generate_reference():
+    return ''.join(random.choices(string.digits, k=9))
 
 async def get_db():
     mongo_url = os.environ['MONGO_URL']
@@ -61,57 +95,84 @@ async def get_current_user(request: Request) -> str:
     from server import get_current_user as base_get_user
     return await base_get_user(request)
 
+@router.get("/methods")
+async def get_payment_methods(request: Request):
+    """Listar métodos de pagamento disponíveis"""
+    await get_current_user(request)
+    methods = []
+    for key, m in PAYMENT_METHODS.items():
+        methods.append({
+            "id": key,
+            "name": m["name"],
+            "icon": m["icon"],
+            "description": m["description"],
+            "processing_time": m["processing_time"]
+        })
+    return {"methods": methods}
+
 @router.get("/bank-accounts")
 async def get_bank_accounts(request: Request):
     """Obter dados bancários para transferência"""
     await get_current_user(request)
-    return {"bank_accounts": BANK_ACCOUNTS}
+    return {"bank_accounts": {k: {kk: vv for kk, vv in v.items() if kk != "instructions"} for k, v in PAYMENT_METHODS.items()}}
 
 @router.post("/create")
 async def create_payment(request: Request, payment_data: dict):
-    """Criar pagamento pendente e gerar código de confirmação"""
+    """Criar pagamento pendente e gerar referência + código de confirmação"""
     user_id = await get_current_user(request)
     db = await get_db()
-
+    
     amount = payment_data.get("amount", 0)
     payment_method = payment_data.get("payment_method", "transferencia")
     reference_type = payment_data.get("reference_type", "order")
     reference_id = payment_data.get("reference_id", "")
     description = payment_data.get("description", "")
-
+    
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Valor inválido")
-
+    
+    if payment_method not in PAYMENT_METHODS:
+        raise HTTPException(status_code=400, detail="Método de pagamento inválido")
+    
     payment_id = f"pay_{uuid.uuid4().hex[:12]}"
     confirmation_code = generate_confirmation_code()
-
-    bank_info = BANK_ACCOUNTS.get(payment_method, BANK_ACCOUNTS["transferencia"])
-
+    reference = generate_reference()
+    
+    method_info = PAYMENT_METHODS[payment_method]
+    expires_at = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
+    
     payment_doc = {
         "payment_id": payment_id,
         "user_id": user_id,
         "amount": amount,
         "payment_method": payment_method,
+        "method_name": method_info["name"],
         "reference_type": reference_type,
         "reference_id": reference_id,
         "description": description,
+        "reference": reference,
         "confirmation_code": confirmation_code,
         "status": "pendente",
-        "bank_info": bank_info,
+        "method_info": method_info,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "confirmed_at": None,
-        "expires_at": None
+        "expires_at": expires_at
     }
-
+    
     await db.payments.insert_one(payment_doc)
-
+    
     return {
         "payment_id": payment_id,
+        "reference": reference,
         "confirmation_code": confirmation_code,
         "amount": amount,
+        "payment_method": payment_method,
+        "method_name": method_info["name"],
+        "instructions": method_info["instructions"],
+        "method_info": {k: v for k, v in method_info.items() if k not in ["instructions", "icon"]},
         "status": "pendente",
-        "bank_info": bank_info,
-        "message": f"Faça a transferência de {amount} Kz e use o código {confirmation_code} para confirmar"
+        "expires_at": expires_at,
+        "message": f"Faça o pagamento de {amount:,.0f} Kz via {method_info['name']}. Referência: {reference}. Use o código {confirmation_code} para confirmar."
     }
 
 @router.post("/confirm")

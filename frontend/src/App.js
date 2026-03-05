@@ -34,6 +34,9 @@ import PartnerDocuments from './pages/PartnerDocuments';
 import ReferralPage from './pages/ReferralPage';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import CouponsPage from './pages/CouponsPage';
+import PaymentsPage from './pages/PaymentsPage';
+import ReportsPage from './pages/ReportsPage';
 import '@/App.css';
 
 function AppRouter() {
@@ -314,6 +317,33 @@ function AppRouter() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/coupons"
+        element={
+          <ProtectedRoute>
+            <CouponsPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/payments"
+        element={
+          <ProtectedRoute>
+            <PaymentsPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <ReportsPage />
           </ProtectedRoute>
         }
       />

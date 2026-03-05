@@ -412,6 +412,44 @@ async def update_ride_status(request: Request, ride_id: str, data: dict):
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Corrida não encontrada")
     
+    # Module interactivity: award points & process wallet payment on completion
+    if new_status == RideStatus.COMPLETED.value:
+        ride = await db.tuendi_rides.find_one({"ride_id": ride_id}, {"_id": 0})
+        if ride:
+            user_id = ride["user_id"]
+            price = ride.get("price", 0)
+            points_earned = max(1, price // 50)
+            
+            # Award points and update stats
+            await db.users.update_one(
+                {"user_id": user_id},
+                {"$inc": {"points": points_earned, "total_orders": 1, "total_spent": price}}
+            )
+            
+            # Create wallet transaction record
+            await db.wallet_transactions.insert_one({
+                "transaction_id": f"txn_{uuid.uuid4().hex[:10]}",
+                "user_id": user_id,
+                "type": "payment",
+                "amount": -price,
+                "description": f"Corrida Tuendi - {ride.get('destination_address', '')}",
+                "order_type": "tuendi",
+                "order_id": ride_id,
+                "status": "completed",
+                "created_at": datetime.utcnow().isoformat()
+            })
+            
+            # Send notification
+            await db.notifications.insert_one({
+                "notification_id": f"notif_{uuid.uuid4().hex[:10]}",
+                "user_id": user_id,
+                "title": "Corrida Concluída!",
+                "message": f"Sua corrida foi concluída. Você ganhou {points_earned} pontos!",
+                "type": "tuendi_ride",
+                "read": False,
+                "created_at": datetime.utcnow().isoformat()
+            })
+    
     return {"ride_id": ride_id, "status": new_status}
 
 @router.post("/rides/{ride_id}/cancel")
@@ -565,6 +603,41 @@ async def update_delivery_status(request: Request, delivery_id: str, data: dict)
     
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Entrega não encontrada")
+    
+    # Module interactivity: award points on delivery completion
+    if new_status == RideStatus.COMPLETED.value:
+        delivery = await db.tuendi_deliveries.find_one({"delivery_id": delivery_id}, {"_id": 0})
+        if delivery:
+            user_id = delivery["user_id"]
+            price = delivery.get("price", 0)
+            points_earned = max(1, price // 50)
+            
+            await db.users.update_one(
+                {"user_id": user_id},
+                {"$inc": {"points": points_earned, "total_orders": 1, "total_spent": price}}
+            )
+            
+            await db.wallet_transactions.insert_one({
+                "transaction_id": f"txn_{uuid.uuid4().hex[:10]}",
+                "user_id": user_id,
+                "type": "payment",
+                "amount": -price,
+                "description": f"Entrega Tuendi - {delivery.get('destination_address', '')}",
+                "order_type": "tuendi",
+                "order_id": delivery_id,
+                "status": "completed",
+                "created_at": datetime.utcnow().isoformat()
+            })
+            
+            await db.notifications.insert_one({
+                "notification_id": f"notif_{uuid.uuid4().hex[:10]}",
+                "user_id": user_id,
+                "title": "Entrega Concluída!",
+                "message": f"Sua entrega foi concluída. Você ganhou {points_earned} pontos!",
+                "type": "tuendi_delivery",
+                "read": False,
+                "created_at": datetime.utcnow().isoformat()
+            })
     
     return {"delivery_id": delivery_id, "status": new_status}
 

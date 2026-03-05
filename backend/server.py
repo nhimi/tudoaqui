@@ -714,6 +714,38 @@ async def update_order_status(request: Request, order_id: str, status_data: dict
         }}
     )
     
+    # Module interactivity: award points when order is delivered
+    if new_status == "entregue":
+        total = order.get("total", 0)
+        points_earned = max(1, int(total // 50))
+        
+        await db.users.update_one(
+            {"user_id": order["user_id"]},
+            {"$inc": {"points": points_earned, "total_orders": 1, "total_spent": total}}
+        )
+        
+        await db.wallet_transactions.insert_one({
+            "transaction_id": f"txn_{uuid.uuid4().hex[:10]}",
+            "user_id": order["user_id"],
+            "type": "payment",
+            "amount": -total,
+            "description": f"Pedido {order.get('restaurant_name', '')}",
+            "order_type": "restaurant",
+            "order_id": order_id,
+            "status": "completed",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        await db.notifications.insert_one({
+            "notification_id": f"notif_{uuid.uuid4().hex[:10]}",
+            "user_id": order["user_id"],
+            "title": "Pedido Entregue!",
+            "message": f"Seu pedido de {order.get('restaurant_name', '')} foi entregue. +{points_earned} pontos!",
+            "type": "order_delivered",
+            "read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
     return {"order_id": order_id, "status": new_status, "message": f"Status atualizado para {new_status}"}
 
 # ============ AVALIAÇÕES / REVIEWS ============

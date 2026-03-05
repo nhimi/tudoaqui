@@ -41,10 +41,31 @@ export const TaxiMap = ({ route }) => {
     (route.pickup.lng + route.destination.lng) / 2
   ];
 
-  // Criar linha da rota
-  const routeCoordinates = route.steps.map(step => [step.lat, step.lng]);
-  routeCoordinates.unshift([route.pickup.lat, route.pickup.lng]);
-  routeCoordinates.push([route.destination.lat, route.destination.lng]);
+  // Criar linha da rota - suporta dois formatos:
+  // 1. route.route_points como [[lat, lng], [lat, lng], ...]
+  // 2. route.steps como [{lat, lng}, {lat, lng}, ...]
+  let routeCoordinates = [];
+  
+  if (route.route_points && Array.isArray(route.route_points)) {
+    // Formato Tuendi: array de arrays [lat, lng]
+    routeCoordinates = route.route_points.filter(
+      point => Array.isArray(point) && point.length >= 2 && 
+               typeof point[0] === 'number' && typeof point[1] === 'number'
+    );
+  } else if (route.steps && Array.isArray(route.steps)) {
+    // Formato antigo: array de objetos {lat, lng}
+    routeCoordinates = route.steps
+      .filter(step => step && typeof step.lat === 'number' && typeof step.lng === 'number')
+      .map(step => [step.lat, step.lng]);
+  }
+  
+  // Adicionar pickup e destination se não estiverem incluídos
+  if (routeCoordinates.length === 0) {
+    routeCoordinates = [
+      [route.pickup.lat, route.pickup.lng],
+      [route.destination.lat, route.destination.lng]
+    ];
+  }
 
   return (
     <div className="w-full h-96 rounded-lg overflow-hidden shadow-lg" data-testid="taxi-map">

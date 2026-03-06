@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TudoAqui — O Super App de Angola</title>
+<meta name="description" content="TudoAqui: mobilidade, comida, turismo, imóveis e pagamentos locais. O primeiro super app feito em Angola, para angolanos.">
+<meta name="keywords" content="TudoAqui, Angola, Luanda, super app, mobilidade, delivery, Tuendi, Multicaixa, Unitel Money">
+<meta property="og:title" content="TudoAqui — O Super App de Angola">
+<meta property="og:description" content="Mobilidade, comida, turismo, imóveis e pagamentos locais num só app.">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="#hero" class="logo">Tudo<span>Aqui</span></a>
+    <div class="nav-links" id="navLinks">
+      <a href="#funcionalidades">Funcionalidades</a>
+      <a href="#como-funciona">Como Funciona</a>
+      <a href="#precos">Preços</a>
+      <a href="#equipa">Equipa</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contacto">Contacto</a>
+    </div>
+    <div class="nav-actions">
+      <a href="#" class="btn btn-ghost" id="loginBtn">Entrar</a>
+      <a href="#" class="btn btn-primary" id="signupBtn">Começar Grátis</a>
+    </div>
+    <button class="mobile-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero" class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="badge"><i class="fas fa-rocket"></i> Novo em Angola</div>
+      <h1>Tudo que<br>precisa,<br><span>num só app.</span></h1>
+      <p>Mobilidade, comida, turismo, imóveis e pagamentos locais. O primeiro super app feito em Angola, para angolanos.</p>
+      <div class="hero-btns">
+        <a href="#" class="btn btn-primary btn-lg" id="heroCta">Começar Grátis <i class="fas fa-arrow-right"></i></a>
+        <a href="#funcionalidades" class="btn btn-outline btn-lg"><i class="fas fa-play"></i> Ver Mais</a>
+      </div>
+      <div class="hero-checks">
+        <span><i class="fas fa-check-circle"></i> Gratuito</span>
+        <span><i class="fas fa-check-circle"></i> Pagamentos Locais</span>
+        <span><i class="fas fa-check-circle"></i> 100% Angolano</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="phone-logo">Tudo<span>Aqui</span></div>
+          <p class="phone-sub">O Super App de Angola</p>
+          <div class="phone-grid">
+            <div class="phone-module"><i class="fas fa-car" style="color:#0D9488"></i><span>Tuendi</span></div>
+            <div class="phone-module"><i class="fas fa-utensils" style="color:#FCBF49"></i><span>Comida</span></div>
+            <div class="phone-module"><i class="fas fa-map-marker-alt" style="color:#2A9D8F"></i><span>Turismo</span></div>
+            <div class="phone-module"><i class="fas fa-building" style="color:#9333EA"></i><span>Imóveis</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="float-badge float-1"><i class="fas fa-fire"></i> Streak: 7 dias!</div>
+      <div class="float-badge float-2"><i class="fas fa-star"></i> +150 pontos</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="container stats-grid">
+    <div class="stat"><i class="fas fa-users"></i><h3>50K+</h3><p>Utilizadores Alvo</p></div>
+    <div class="stat"><i class="fas fa-store"></i><h3>300+</h3><p>Parceiros</p></div>
+    <div class="stat"><i class="fas fa-bolt"></i><h3>6</h3><p>Módulos</p></div>
+    <div class="stat"><i class="fas fa-credit-card"></i><h3>4</h3><p>Pagamentos Locais</p></div>
+  </div>
+</section>
+
+<!-- FUNCIONALIDADES -->
+<section id="funcionalidades" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="label" style="color:#D62828">Funcionalidades</span>
+      <h2>Tudo num só lugar</h2>
+      <p>Seis módulos integrados com pagamentos locais angolanos e sistema de fidelização gamificado</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(13,148,136,0.1)"><i class="fas fa-car" style="color:#0D9488"></i></div><span class="tag">Mobilidade</span><h3>Tuendi</h3><p>Corridas, moto-táxi e entregas rápidas em Luanda</p></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(252,191,73,0.1)"><i class="fas fa-utensils" style="color:#FCBF49"></i></div><span class="tag">Delivery</span><h3>Restaurantes</h3><p>Peça comida dos melhores restaurantes com delivery</p></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(42,157,143,0.1)"><i class="fas fa-map-marker-alt" style="color:#2A9D8F"></i></div><span class="tag">Viagens</span><h3>Turismo</h3><p>Descubra hotéis, resorts e experiências angolanas</p></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(147,51,234,0.1)"><i class="fas fa-building" style="color:#9333EA"></i></div><span class="tag">Imobiliário</span><h3>Imóveis</h3><p>Compra, venda e arrendamento de propriedades</p></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(214,40,40,0.1)"><i class="fas fa-credit-card" style="color:#D62828"></i></div><span class="tag">Fintech</span><h3>Pagamentos</h3><p>Multicaixa Express, Unitel Money, BAI Paga</p></div>
+      <div class="feature-card"><div class="feature-icon" style="background:rgba(249,115,22,0.1)"><i class="fas fa-gift" style="color:#F97316"></i></div><span class="tag">Rewards</span><h3>Fidelização</h3><p>Pontos, streaks diários, cupons e tiers VIP</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section id="como-funciona" class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <span class="label" style="color:#0D9488">Como Funciona</span>
+      <h2>Simples como 1-2-3-4</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step"><div class="step-num">01</div><i class="fas fa-mobile-alt"></i><h3>Registe-se</h3><p>Crie conta gratuita em segundos com email ou Google</p></div>
+      <div class="step"><div class="step-num">02</div><i class="fas fa-bolt"></i><h3>Escolha o Serviço</h3><p>Mobilidade, comida, turismo, imóveis — tudo num só lugar</p></div>
+      <div class="step"><div class="step-num">03</div><i class="fas fa-credit-card"></i><h3>Pague Localmente</h3><p>Use Multicaixa, Unitel Money, BAI Paga ou transferência</p></div>
+      <div class="step"><div class="step-num">04</div><i class="fas fa-award"></i><h3>Ganhe Pontos</h3><p>Cada uso acumula pontos para descontos e benefícios VIP</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTEMUNHOS -->
+<section id="testemunhos" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="label" style="color:#FCBF49">Testemunhos</span>
+      <h2>O que dizem sobre nós</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial"><i class="fas fa-quote-left quote-icon"></i><p>"Finalmente um app angolano que funciona! Uso o Tuendi todos os dias para ir ao trabalho e pedir comida ao almoço."</p><div class="testimonial-author"><div class="avatar">AL</div><div><strong>Ana Luísa M.</strong><span>Utilizadora — Luanda</span></div></div><div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div>
+      <div class="testimonial"><i class="fas fa-quote-left quote-icon"></i><p>"Desde que me tornei parceiro TudoAqui, as minhas vendas aumentaram 40%. O sistema de gestão de pedidos é excelente."</p><div class="testimonial-author"><div class="avatar">PC</div><div><strong>Pedro C.</strong><span>Dono de Restaurante — Benguela</span></div></div><div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div>
+      <div class="testimonial"><i class="fas fa-quote-left quote-icon"></i><p>"A plataforma de imóveis trouxe-me 3x mais leads qualificados do que os métodos tradicionais. Recomendo!"</p><div class="testimonial-author"><div class="avatar">MJ</div><div><strong>Maria J.</strong><span>Agente Imobiliária — Luanda</span></div></div><div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRECOS -->
+<section id="precos" class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <span class="label" style="color:#9333EA">Preços</span>
+      <h2>Planos para todos</h2>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card"><h3>Gratuito</h3><div class="price">0 <span>Kz/sempre</span></div><ul><li><i class="fas fa-check"></i> Todos os módulos</li><li><i class="fas fa-check"></i> Pagamentos locais</li><li><i class="fas fa-check"></i> Suporte básico</li><li><i class="fas fa-check"></i> Pontos e streaks</li></ul><a href="#" class="btn btn-outline">Começar Grátis</a></div>
+      <div class="price-card popular"><div class="popular-badge">Popular</div><h3>Premium</h3><div class="price">2.500 <span>Kz/mês</span></div><ul><li><i class="fas fa-check"></i> Tudo do Gratuito</li><li><i class="fas fa-check"></i> Sem taxas de entrega</li><li><i class="fas fa-check"></i> Suporte prioritário</li><li><i class="fas fa-check"></i> Cupons exclusivos</li><li><i class="fas fa-check"></i> Cashback 2%</li></ul><a href="#" class="btn btn-primary">Experimentar Premium</a></div>
+      <div class="price-card"><h3>Parceiro</h3><div class="price">15.000 <span>Kz/mês</span></div><ul><li><i class="fas fa-check"></i> Dashboard completo</li><li><i class="fas fa-check"></i> Gestão de pedidos</li><li><i class="fas fa-check"></i> Relatórios CSV</li><li><i class="fas fa-check"></i> Listagem prioritária</li><li><i class="fas fa-check"></i> Suporte dedicado</li></ul><a href="#" class="btn btn-outline">Tornar-se Parceiro</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- EQUIPA -->
+<section id="equipa" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="label" style="color:#D62828">Equipa</span>
+      <h2>Quem está por trás</h2>
+      <p>Sincesoft — Sinceridade Service | NIF: 2403104787</p>
+    </div>
+    <div class="team-grid">
+      <div class="team-card"><div class="team-avatar">JN</div><h4>João Maria Nhimi</h4><p>Fundador & CEO</p></div>
+      <div class="team-card"><div class="team-avatar">MC</div><h4>Miguel da Costa</h4><p>Conselheiro Estratégico</p></div>
+      <div class="team-card"><div class="team-avatar">EC</div><h4>Eliseu Costa</h4><p>Director Técnico / CTO</p></div>
+      <div class="team-card"><div class="team-avatar">AC</div><h4>Ansty Cavango</h4><p>Finanças / CFO</p></div>
+      <div class="team-card"><div class="team-avatar">PV</div><h4>Patruska Victor</h4><p>Marketing / CMO</p></div>
+      <div class="team-card"><div class="team-avatar">JM</div><h4>João Malonda</h4><p>Marketing & Crescimento</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap" class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <span class="label" style="color:#0D9488">Roadmap</span>
+      <h2>O caminho à frente</h2>
+    </div>
+    <div class="roadmap-grid">
+      <div class="roadmap-card done"><div class="rm-dot"></div><span class="rm-phase">Q1 2026</span><h3>Lançamento MVP</h3><ul><li>App funcional</li><li>3 módulos core</li><li>Beta em Luanda</li></ul></div>
+      <div class="roadmap-card current"><div class="rm-dot"></div><span class="rm-phase">Q2 2026</span><h3>Beta Público</h3><ul><li>1.000 utilizadores</li><li>50 parceiros</li><li>Pagamentos reais</li></ul></div>
+      <div class="roadmap-card next"><div class="rm-dot"></div><span class="rm-phase">Q3-Q4 2026</span><h3>Crescimento</h3><ul><li>Marketing TV/Digital</li><li>Benguela e Huambo</li><li>Parcerias operadoras</li></ul></div>
+      <div class="roadmap-card future"><div class="rm-dot"></div><span class="rm-phase">2027</span><h3>Expansão PALOP</h3><ul><li>Moçambique</li><li>Cabo Verde</li><li>Microcrédito</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="section">
+  <div class="container container-sm">
+    <div class="section-header">
+      <span class="label" style="color:#FCBF49">FAQ</span>
+      <h2>Perguntas Frequentes</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">O TudoAqui é gratuito? <i class="fas fa-chevron-down"></i></button><div class="faq-answer">Sim! A versão base é totalmente gratuita. Oferecemos planos Premium com benefícios extras como entrega grátis e cashback.</div></div>
+      <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Quais métodos de pagamento aceitam? <i class="fas fa-chevron-down"></i></button><div class="faq-answer">Aceitamos Multicaixa Express, Unitel Money, BAI Paga e Transferência Bancária. Todos processados de forma segura.</div></div>
+      <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Como funciona o sistema de pontos? <i class="fas fa-chevron-down"></i></button><div class="faq-answer">Cada compra gera pontos (1 por cada 50 Kz). Pontos podem ser trocados por descontos. Streaks diários multiplicam os pontos.</div></div>
+      <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Posso ser parceiro/restaurante? <i class="fas fa-chevron-down"></i></button><div class="faq-answer">Sim! Registe-se como parceiro no app. Temos planos a partir de 15.000 Kz/mês com dashboard de gestão completo.</div></div>
+      <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">O app funciona fora de Luanda? <i class="fas fa-chevron-down"></i></button><div class="faq-answer">Actualmente operamos em Luanda. Planeamos expandir para Benguela, Huambo e Lobito em 2026, e PALOP em 2027.</div></div>
+      <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Os meus dados estão seguros? <i class="fas fa-chevron-down"></i></button><div class="faq-answer">Sim. Usamos encriptação JWT, cookies seguros e cumprimos a legislação angolana de protecção de dados (APD).</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto" class="section section-alt">
+  <div class="container container-sm">
+    <div class="section-header">
+      <span class="label" style="color:#D62828">Contacto</span>
+      <h2>Fale Connosco</h2>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info">
+        <div class="contact-item"><i class="fas fa-map-marker-alt"></i><div><strong>Morada</strong><p>Ave. Hoji ya Henda 132, Vila Alice, Rangel — Luanda, Angola</p></div></div>
+        <div class="contact-item"><i class="fas fa-building"></i><div><strong>Empresa</strong><p>Sincesoft — Sinceridade Service<br>NIF: 2403104787</p></div></div>
+        <div class="contact-item"><i class="fas fa-user-tie"></i><div><strong>Fundador</strong><p>João Maria Nhimi (CEO)</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-section">
+  <div class="container" style="text-align:center">
+    <h2>Pronto para experimentar?</h2>
+    <p>Junte-se a milhares de angolanos que já descobriram o TudoAqui.</p>
+    <a href="#" class="btn btn-primary btn-lg" id="finalCta">Criar Conta Grátis <i class="fas fa-arrow-right"></i></a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div><a href="#" class="logo">Tudo<span>Aqui</span></a><p>O Super App de Angola</p><small>Sincesoft — Sinceridade Service<br>NIF: 2403104787</small></div>
+      <div><h4>Produto</h4><a href="#funcionalidades">Funcionalidades</a><a href="#precos">Preços</a><a href="#roadmap">Roadmap</a></div>
+      <div><h4>Empresa</h4><a href="#equipa">Equipa</a><a href="#faq">FAQ</a><a href="#contacto">Contacto</a></div>
+      <div><h4>Legal</h4><a href="#">Termos de Uso</a><a href="#">Privacidade</a><a href="#">Cookies</a></div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 TudoAqui by Sincesoft. Todos os direitos reservados.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

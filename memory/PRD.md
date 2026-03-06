@@ -47,10 +47,9 @@ Includes modules for Tuendi (ride-hailing/deliveries), restaurants, tourism, rea
 - [x] Partner: tiers, analytics, bank details, menu CRUD, incoming orders
 - [x] Admin: config, user mgmt, doc review, IVA toggle
 - [x] Notifications, Referral system, Wallet, Profile
-- [x] **Pitch Deck**: Apresentação interativa completa (/pitch) + export HTML/PDF
-  - Mercado (TAM/SAM/SOM), Receita, Custos, Roadmap 5 fases
-  - Legalidade (8 requisitos), Parcerias (6 tipos), Marketing (4 fases)
-  - Testes (5 fases), Equipa, Projecções 3 anos, Série A (500M Kz)
+- [x] **Pitch Deck**: Apresentação interativa (/pitch) + export HTML/PDF com mercado, receita, custos, roadmap, legal, parcerias, marketing, testes, equipa, Série A
+- [x] **Landing Page completa**: Hero, Funcionalidades, Como Funciona, Preços, Equipa, Testemunhos, Roadmap público, FAQ, Blog, Contacto
+- [x] **Site Standalone**: HTML/CSS/JS puro em `/standalone-site/` com script de instalação universal (Nginx/Apache/Docker)
 
 ## Simulated/Mocked
 - Payment gateway (confirmation codes generated locally, no real API)

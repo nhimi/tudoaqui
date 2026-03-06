@@ -3,11 +3,10 @@
 ## Original Problem Statement
 Comprehensive marketplace for Angola called **TudoAqui** by **Sincesoft-Sinceridade Service**.
 Includes modules for Tuendi (ride-hailing/deliveries), restaurants, tourism, real estate, partner management, admin, and more.
-User requested mobile conversion (iOS/Android) using Capacitor.js, backend refactoring, and dedicated pytest tests.
 
 ## Architecture
-- **Frontend**: React, Tailwind CSS, Shadcn UI, react-leaflet
-- **Backend**: FastAPI (modular routers), Motor (async MongoDB)
+- **Frontend**: React, Tailwind CSS, Shadcn UI, react-leaflet, recharts
+- **Backend**: FastAPI (modular routers), Motor (async MongoDB), WebSocket
 - **Database**: MongoDB
 - **Auth**: JWT-based (auth_module.py) with Google OAuth support
 - **Mobile**: Capacitor.js v7 (iOS + Android)
@@ -15,65 +14,64 @@ User requested mobile conversion (iOS/Android) using Capacitor.js, backend refac
 ### Backend Modules
 | Module | File | Features |
 |--------|------|----------|
-| Core | `server.py` | Backward compat routes (tourism, properties, bookings), fiscal, user tier, IVA |
-| Auth | `auth_module.py` | JWT auth, roles, tiers, points, password reset, Google OAuth |
-| Wallet | `wallet_module.py` | Balance, topup, payments, transfers, refunds, stats |
-| Tuendi | `tuendi_module.py` | Rides, deliveries, drivers, chat, ratings, coupons, wallet |
-| Rides | `rides_module.py` | Taxi apps, navigation, ride requests, ride comparison |
+| Core | `server.py` | Backward compat routes, fiscal, user tier, IVA |
+| Auth | `auth_module.py` | JWT auth, roles, tiers, points, password reset |
+| Wallet | `wallet_module.py` | Balance, topup, payments, transfers, refunds |
+| Tuendi | `tuendi_module.py` | Rides, deliveries, drivers, chat, ratings |
+| Rides | `rides_module.py` | Taxi apps, navigation, ride requests |
 | Restaurants | `restaurants_module.py` | Restaurants, menus, orders, reviews |
-| Admin | `admin_module.py` | Roles, config, user mgmt, doc review, IVA toggle, reports |
-| Partners | `partners_module.py` | Tiers, analytics, bank details, document upload, menu CRUD |
-| Payments | `payments_module.py` | Multicaixa Express, Unitel Money, BAI Paga, Transferencia |
-| Coupons | `coupon_module.py` | Universal coupons: percent, fixed, free delivery, tier-locked |
-| Streak | `streak_module.py` | Daily streak with multipliers (3d=2x, 7d=3x, 14d=5x, 30d=10x) |
-| Reports | `reports_module.py` | Admin/partner/user CSV + JSON reports with IVA |
-| Accounting | `accounting_module.py` | PGCA (journal, balance sheet) |
+| WebSocket | `websocket_module.py` | Real-time notifications, ride tracking, chat |
+| Admin | `admin_module.py` | Config, user mgmt, doc review, IVA toggle |
+| Partners | `partners_module.py` | Tiers, analytics basic + advanced, bank details |
+| Payments | `payments_module.py` | Multicaixa, Unitel Money, BAI Paga (SIMULATED) |
+| Coupons | `coupon_module.py` | Universal coupons, tier-locked |
+| Streak | `streak_module.py` | Daily streak with multipliers |
+| Reports | `reports_module.py` | Admin/partner/user CSV + JSON |
+| Accounting | `accounting_module.py` | PGCA journal, balance sheet |
 | Fiscal | `fiscal_compliance.py` | IVA 14%, retention, NIF validation |
 | Notifications | `notifications_module.py` | In-app notifications |
-| Referral | `referral_module.py` | Unique codes, rewards, coupons |
+| Referral | `referral_module.py` | Codes, rewards, coupons |
 | Tourism | `tourism_router.py` | Tourist places and bookings |
 | Properties | `properties_router.py` | Real estate listings |
 | Pitch | `pitch_module.py` | Investor pitch deck data |
 
 ## Implemented Features (March 2026)
-- [x] Auth (email/password + Google OAuth, JWT tokens, unified system)
-- [x] User tiers (Bronze->Silver->Gold->Platinum->VIP), points system, rewards
-- [x] Daily Streak system with milestones and point multipliers
-- [x] Advanced Coupon system (percent/fixed/free_delivery, tier-locked, usage limits)
-- [x] Payment Gateway (Multicaixa Express, Unitel Money, BAI Paga, Transferencia Bancaria)
-- [x] Report Export (Admin/Partner/User CSV + JSON with IVA 14%)
-- [x] Role-based UI restrictions (admin/partner/user visibility)
-- [x] Dashboard with streak badge, quick tools, role-based links
-- [x] Module Interactivity: ride/delivery/order completion -> points + wallet + notifications
-- [x] Tuendi: vehicle types, rides, deliveries, driver assignment, chat
-- [x] Restaurants: search, filters, menu, cart, checkout, reviews/ratings
-- [x] Tourism: listings, detail, bookings
-- [x] Real Estate: listings, detail, inquiries
-- [x] Partner: tiers, analytics, bank details, menu CRUD, incoming orders
+- [x] Auth (email/password + Google OAuth, JWT tokens)
+- [x] User tiers (Bronze->Silver->Gold->Platinum->VIP), points, rewards
+- [x] Daily Streak system with milestones and multipliers
+- [x] Coupon system (percent/fixed/free_delivery, tier-locked)
+- [x] Payment Gateway SIMULATED (Multicaixa, Unitel Money, BAI Paga)
+- [x] Report Export (CSV + JSON with IVA 14%)
+- [x] Role-based UI (admin/partner/user)
+- [x] Tuendi: rides, deliveries, driver assignment, chat
+- [x] Restaurants: search, menu, cart, checkout, reviews
+- [x] Tourism: listings, bookings
+- [x] Real Estate: listings, inquiries
+- [x] Partner: tiers, basic + advanced analytics, bank details, menu CRUD
 - [x] Admin: config, user mgmt, doc review, IVA toggle
-- [x] Notifications, Referral system, Wallet, Profile
-- [x] Pitch Deck: Interactive presentation + export HTML/PDF
-- [x] Landing Page: Hero, Features, How it Works, Pricing, Team, Testimonials, FAQ
-- [x] Static Site: HTML/CSS/JS in /standalone-site/ with deploy script
-- [x] **Mobile Conversion (Capacitor.js v7)**: iOS and Android project files generated
-- [x] **Backend Refactoring**: server.py reduced from 1007 to ~280 lines; rides_module.py and restaurants_module.py extracted
-- [x] **Dedicated Pytest Tests**: 53+ tests (refactoring validation + full feature coverage)
+- [x] Notifications, Referral, Wallet, Profile
+- [x] Pitch Deck: Presentation + export HTML/PDF
+- [x] Landing Page + Static Site with deploy script
+- [x] Mobile Conversion (Capacitor.js v7 - iOS + Android)
+- [x] Backend Refactoring (server.py 1007 -> ~280 lines)
+- [x] **WebSocket Module**: Real-time notifications, ride tracking, chat
+- [x] **Advanced Partner Dashboard**: KPIs, charts (recharts), activity heatmaps, transactions
+- [x] **Real-time Notification Badge**: WebSocket with HTTP polling fallback
 
 ## Simulated/Mocked
-- Payment gateway (confirmation codes generated locally, no real API)
-- Driver assignment (random names from predefined list)
+- Payment gateway (no real API)
+- Driver assignment (random names)
+- Chat auto-reply from driver
 
 ## Backlog
 ### P1
-- [ ] WebSocket real-time order tracking and chat
-- [ ] Push notifications (real)
+- [ ] Push notifications (native mobile)
+- [ ] Exportacao de relatorios em PDF
 
 ### P2
 - [ ] Real payment gateway API integration
-- [ ] PDF report export (in addition to CSV)
-- [ ] Advanced partner analytics dashboard
 - [ ] Multi-language support (Portuguese/English)
 
 ## Test Credentials
-- Admin user: maria@tudoaqui.ao / maria123456 (admin role, bronze tier)
-- Seeded coupons: TUENDI20, COMIDA10, ENTREGAGRATIS, VIP500 (gold+)
+- Admin: maria@tudoaqui.ao / maria123456
+- Seeded coupons: TUENDI20, COMIDA10, ENTREGAGRATIS, VIP500

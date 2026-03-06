@@ -62,32 +62,86 @@ export function useWebSocket(path, { onMessage, autoReconnect = true } = {}) {
 export function useNotifications(userId) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
+  const [wsConnected, setWsConnected] = useState(false);
+  const pollingRef = useRef(null);
+  const wsRef = useRef(null);
+  const reconnectRef = useRef(null);
 
-  const { connected, send } = useWebSocket(
-    userId ? `/ws/notifications/${userId}` : null,
-    {
-      onMessage: (data) => {
-        if (data.type === 'init') {
-          setUnreadCount(data.unread_count);
-        } else if (data.type === 'unread_update') {
-          setUnreadCount(data.unread_count);
-        } else if (data.type === 'notification') {
-          setNotifications(prev => [data.notification, ...prev]);
-          setUnreadCount(prev => prev + 1);
-        }
+  const fetchUnread = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/notifications/`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.unread_count || 0);
       }
-    }
-  );
+    } catch (e) { /* ignore */ }
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const connectWs = () => {
+      const url = getWsUrl(`/ws/notifications/${userId}`);
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        setWsConnected(true);
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'init') setUnreadCount(data.unread_count);
+          else if (data.type === 'unread_update') setUnreadCount(data.unread_count);
+          else if (data.type === 'notification') {
+            setNotifications(prev => [data.notification, ...prev]);
+            setUnreadCount(prev => prev + 1);
+          }
+        } catch (e) { /* ignore */ }
+      };
+
+      ws.onclose = () => {
+        setWsConnected(false);
+        if (!pollingRef.current) {
+          fetchUnread();
+          pollingRef.current = setInterval(fetchUnread, 15000);
+        }
+        reconnectRef.current = setTimeout(connectWs, 5000);
+      };
+
+      ws.onerror = () => ws.close();
+    };
+
+    fetchUnread();
+    connectWs();
+
+    return () => {
+      clearTimeout(reconnectRef.current);
+      clearInterval(pollingRef.current);
+      wsRef.current?.close();
+    };
+  }, [userId, fetchUnread]);
 
   const markRead = useCallback((notificationId) => {
-    send({ action: 'mark_read', notification_id: notificationId });
-  }, [send]);
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'mark_read', notification_id: notificationId }));
+    }
+  }, []);
 
   const markAllRead = useCallback(() => {
-    send({ action: 'mark_all_read' });
-  }, [send]);
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'mark_all_read' }));
+    }
+    setUnreadCount(0);
+  }, []);
 
-  return { connected, unreadCount, notifications, markRead, markAllRead };
+  return { connected: wsConnected, unreadCount, notifications, markRead, markAllRead };
 }
 
 export function useRideTracking(rideId) {

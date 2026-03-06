@@ -170,7 +170,7 @@ export default function PartnerAdvancedAnalytics() {
               {/* Commission Breakdown */}
               <Card className="p-5 bg-[#1A1A1A] border-white/5 rounded-xl" data-testid="commission-card">
                 <h3 className="text-white font-bold mb-4">Distribuicao Financeira</h3>
-                <div className="h-64 flex items-center justify-center">
+                <div className="h-64" style={{ minWidth: 0 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie

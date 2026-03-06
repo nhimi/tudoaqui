@@ -27,6 +27,7 @@ from wallet_module import router as wallet_router
 from coupon_module import router as coupon_router
 from streak_module import router as streak_router
 from reports_module import router as reports_router
+from pitch_module import router as pitch_router
 from fiscal_compliance import (
     calculate_iva, calculate_commission_with_taxes,
     calculate_retencao_na_fonte, calculate_imposto_industrial,
@@ -991,6 +992,7 @@ app.include_router(wallet_router, prefix="/api")
 app.include_router(coupon_router, prefix="/api")
 app.include_router(streak_router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
+app.include_router(pitch_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

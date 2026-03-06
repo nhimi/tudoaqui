@@ -37,6 +37,7 @@ import Profile from './pages/Profile';
 import CouponsPage from './pages/CouponsPage';
 import PaymentsPage from './pages/PaymentsPage';
 import ReportsPage from './pages/ReportsPage';
+import PitchDeck from './pages/PitchDeck';
 import '@/App.css';
 
 function AppRouter() {
@@ -347,6 +348,8 @@ function AppRouter() {
           </ProtectedRoute>
         }
       />
+      
+      <Route path="/pitch" element={<PitchDeck />} />
     </Routes>
   );
 }

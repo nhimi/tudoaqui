@@ -28,6 +28,7 @@ import AccountingDashboard from './pages/AccountingDashboard';
 import JournalEntryForm from './pages/JournalEntryForm';
 import AdminDashboard from './pages/AdminDashboard';
 import PartnerAnalytics from './pages/PartnerAnalytics';
+import PartnerAdvancedAnalytics from './pages/PartnerAdvancedAnalytics';
 import PartnerMenuManagement from './pages/PartnerMenuManagement';
 import PartnerOrders from './pages/PartnerOrders';
 import PartnerDocuments from './pages/PartnerDocuments';
@@ -264,6 +265,15 @@ function AppRouter() {
         element={
           <ProtectedRoute>
             <PartnerAnalytics />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/partner/analytics/advanced"
+        element={
+          <ProtectedRoute>
+            <PartnerAdvancedAnalytics />
           </ProtectedRoute>
         }
       />

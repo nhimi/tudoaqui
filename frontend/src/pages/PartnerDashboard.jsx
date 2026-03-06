@@ -222,6 +222,14 @@ export default function PartnerDashboard() {
                   <BarChart3 size={24} className="mb-2" />
                   <span className="text-sm">Analytics</span>
                 </Button>
+                <Button
+                  onClick={() => navigate('/partner/analytics/advanced')}
+                  className="h-20 bg-[#1A1A1A] hover:bg-[#1A1A1A]/90 text-white flex-col"
+                  data-testid="advanced-analytics-btn"
+                >
+                  <TrendingUp size={24} className="mb-2" />
+                  <span className="text-sm">Analytics Pro</span>
+                </Button>
               </div>
             </Card>
 

@@ -427,6 +427,126 @@ async def get_partner_analytics(request: Request):
         "tier_info": PARTNER_TIERS.get(partner.get("tier", "basico"), {})
     }
 
+
+@router.get("/analytics/advanced")
+async def get_partner_analytics_advanced(request: Request):
+    """Analytics avancado com metricas detalhadas, graficos e KPIs"""
+    user_id = await get_current_user(request)
+    db = await get_db()
+
+    partner = await db.partners.find_one({"user_id": user_id}, {"_id": 0})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Parceiro nao encontrado")
+
+    pid = partner["partner_id"]
+
+    total_services = await db.service_listings.count_documents({"partner_id": pid})
+    active_services = await db.service_listings.count_documents({"partner_id": pid, "status": "active"})
+
+    transactions = await db.transactions.find({"partner_id": pid}, {"_id": 0}).sort("created_at", -1).to_list(200)
+
+    total_revenue = sum(t["amount"] for t in transactions if t.get("type") == "credit")
+    total_commission = sum(abs(t["amount"]) for t in transactions if t.get("type") == "commission")
+    total_payouts = sum(abs(t["amount"]) for t in transactions if t.get("type") == "payout")
+
+    monthly_data = {}
+    daily_data = {}
+    hourly_data = {str(h).zfill(2): 0 for h in range(24)}
+    weekday_data = {"Seg": 0, "Ter": 0, "Qua": 0, "Qui": 0, "Sex": 0, "Sab": 0, "Dom": 0}
+    weekday_map = {0: "Seg", 1: "Ter", 2: "Qua", 3: "Qui", 4: "Sex", 5: "Sab", 6: "Dom"}
+
+    for t in transactions:
+        created = t.get("created_at", "")
+        month = created[:7]
+        day = created[:10]
+
+        if month not in monthly_data:
+            monthly_data[month] = {"revenue": 0, "commission": 0, "orders": 0, "net": 0}
+        if day not in daily_data:
+            daily_data[day] = {"revenue": 0, "orders": 0}
+
+        if t.get("type") == "credit":
+            monthly_data[month]["revenue"] += t["amount"]
+            monthly_data[month]["orders"] += 1
+            daily_data[day]["revenue"] += t["amount"]
+            daily_data[day]["orders"] += 1
+
+            try:
+                dt = datetime.fromisoformat(created)
+                hour = str(dt.hour).zfill(2)
+                hourly_data[hour] = hourly_data.get(hour, 0) + 1
+                wd = weekday_map.get(dt.weekday(), "Seg")
+                weekday_data[wd] = weekday_data.get(wd, 0) + 1
+            except (ValueError, AttributeError):
+                pass
+
+        elif t.get("type") == "commission":
+            monthly_data[month]["commission"] += abs(t["amount"])
+
+    for m in monthly_data:
+        monthly_data[m]["net"] = monthly_data[m]["revenue"] - monthly_data[m]["commission"]
+
+    monthly_sorted = sorted(monthly_data.items(), reverse=True)[:12]
+
+    revenue_growth = 0
+    if len(monthly_sorted) >= 2:
+        current = monthly_sorted[0][1]["revenue"]
+        prev = monthly_sorted[1][1]["revenue"]
+        if prev > 0:
+            revenue_growth = round(((current - prev) / prev) * 100, 1)
+
+    orders_growth = 0
+    if len(monthly_sorted) >= 2:
+        current = monthly_sorted[0][1]["orders"]
+        prev = monthly_sorted[1][1]["orders"]
+        if prev > 0:
+            orders_growth = round(((current - prev) / prev) * 100, 1)
+
+    total_orders = sum(m[1]["orders"] for m in monthly_sorted)
+    avg_order_value = round(total_revenue / total_orders, 2) if total_orders > 0 else 0
+
+    services = await db.service_listings.find({"partner_id": pid}, {"_id": 0}).to_list(100)
+    top_services = sorted(services, key=lambda s: s.get("views", 0), reverse=True)[:5]
+
+    daily_sorted = sorted(daily_data.items(), reverse=True)[:30]
+
+    return {
+        "partner": {
+            "partner_id": pid,
+            "business_name": partner.get("business_name"),
+            "tier": partner.get("tier", "basico"),
+            "status": partner.get("status"),
+            "commission_rate": partner.get("commission_rate", 0.15)
+        },
+        "tier_info": PARTNER_TIERS.get(partner.get("tier", "basico"), {}),
+        "kpis": {
+            "total_revenue": total_revenue,
+            "total_commission": total_commission,
+            "total_payouts": total_payouts,
+            "net_revenue": total_revenue - total_commission,
+            "wallet_balance": partner.get("wallet_balance", 0),
+            "total_orders": total_orders,
+            "avg_order_value": avg_order_value,
+            "active_services": active_services,
+            "total_services": total_services,
+            "revenue_growth_pct": revenue_growth,
+            "orders_growth_pct": orders_growth
+        },
+        "charts": {
+            "monthly_revenue": [{"month": m, **d} for m, d in monthly_sorted],
+            "daily_revenue": [{"date": d, **v} for d, v in daily_sorted],
+            "hourly_distribution": [{"hour": h, "orders": c} for h, c in sorted(hourly_data.items())],
+            "weekday_distribution": [{"day": d, "orders": c} for d, c in weekday_data.items()]
+        },
+        "top_services": [{
+            "title": s.get("title", "Sem titulo"),
+            "views": s.get("views", 0),
+            "price": s.get("price", 0),
+            "status": s.get("status", "active")
+        } for s in top_services],
+        "recent_transactions": [{k: v for k, v in t.items() if k != "_id"} for t in transactions[:10]]
+    }
+
 @router.put("/bank-details")
 async def update_partner_bank_details(request: Request, bank_data: dict):
     """Parceiro atualiza seus dados bancários para receber pagamentos"""

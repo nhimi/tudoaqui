@@ -5,21 +5,23 @@ import { Car, UtensilsCrossed, MapPin, Building2, Bell, Shield, BarChart3, Brief
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
+import { useNotifications } from '../hooks/useWebSocket';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function Dashboard({ user }) {
   const navigate = useNavigate();
-  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [streak, setStreak] = useState(null);
+  const { unreadCount, notifications: wsNotifications, connected: wsConnected } = useNotifications(user?.user_id);
 
   useEffect(() => {
-    fetch(`${BACKEND_URL}/api/notifications/`, { credentials: 'include' })
-      .then(r => r.ok ? r.json() : { unread_count: 0 })
-      .then(d => setUnreadNotifs(d.unread_count || 0))
-      .catch(() => {});
-    
-    // Load and auto-checkin streak
+    if (wsNotifications.length > 0) {
+      const latest = wsNotifications[0];
+      toast.info(latest.title, { description: latest.message });
+    }
+  }, [wsNotifications]);
+
+  useEffect(() => {
     fetch(`${BACKEND_URL}/api/streak/checkin`, { method: 'POST', credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
@@ -61,8 +63,8 @@ export default function Dashboard({ user }) {
               <div className="flex gap-2">
                 <button onClick={() => navigate('/notifications')} className="relative w-10 h-10 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/25 transition" data-testid="notifications-btn">
                   <Bell size={20} className="text-white" />
-                  {unreadNotifs > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FCBF49] text-[#1A1A1A] text-xs font-bold rounded-full flex items-center justify-center">{unreadNotifs}</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FCBF49] text-[#1A1A1A] text-xs font-bold rounded-full flex items-center justify-center">{unreadCount}</span>
                   )}
                 </button>
                 {isAdmin && (

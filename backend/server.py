@@ -27,6 +27,7 @@ from reports_module import router as reports_router
 from pitch_module import router as pitch_router
 from rides_module import router as rides_router
 from restaurants_module import router as restaurants_router
+from websocket_module import router as ws_router
 from fiscal_compliance import (
     calculate_iva, calculate_commission_with_taxes,
     calculate_retencao_na_fonte, calculate_imposto_industrial,
@@ -265,6 +266,7 @@ app.include_router(reports_router, prefix="/api")
 app.include_router(pitch_router, prefix="/api")
 app.include_router(rides_router, prefix="/api")
 app.include_router(restaurants_router, prefix="/api")
+app.include_router(ws_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

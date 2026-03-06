@@ -3,23 +3,27 @@
 ## Original Problem Statement
 Comprehensive marketplace for Angola called **TudoAqui** by **Sincesoft-Sinceridade Service**.
 Includes modules for Tuendi (ride-hailing/deliveries), restaurants, tourism, real estate, partner management, admin, and more.
+User requested mobile conversion (iOS/Android) using Capacitor.js, backend refactoring, and dedicated pytest tests.
 
 ## Architecture
 - **Frontend**: React, Tailwind CSS, Shadcn UI, react-leaflet
 - **Backend**: FastAPI (modular routers), Motor (async MongoDB)
 - **Database**: MongoDB
 - **Auth**: JWT-based (auth_module.py) with Google OAuth support
+- **Mobile**: Capacitor.js v7 (iOS + Android)
 
 ### Backend Modules
 | Module | File | Features |
 |--------|------|----------|
-| Core | `server.py` | Restaurants, orders, reviews, taxi, rides, fiscal, IVA |
+| Core | `server.py` | Backward compat routes (tourism, properties, bookings), fiscal, user tier, IVA |
 | Auth | `auth_module.py` | JWT auth, roles, tiers, points, password reset, Google OAuth |
 | Wallet | `wallet_module.py` | Balance, topup, payments, transfers, refunds, stats |
 | Tuendi | `tuendi_module.py` | Rides, deliveries, drivers, chat, ratings, coupons, wallet |
+| Rides | `rides_module.py` | Taxi apps, navigation, ride requests, ride comparison |
+| Restaurants | `restaurants_module.py` | Restaurants, menus, orders, reviews |
 | Admin | `admin_module.py` | Roles, config, user mgmt, doc review, IVA toggle, reports |
 | Partners | `partners_module.py` | Tiers, analytics, bank details, document upload, menu CRUD |
-| Payments | `payments_module.py` | Multicaixa Express, Unitel Money, BAI Paga, Transferência |
+| Payments | `payments_module.py` | Multicaixa Express, Unitel Money, BAI Paga, Transferencia |
 | Coupons | `coupon_module.py` | Universal coupons: percent, fixed, free delivery, tier-locked |
 | Streak | `streak_module.py` | Daily streak with multipliers (3d=2x, 7d=3x, 14d=5x, 30d=10x) |
 | Reports | `reports_module.py` | Admin/partner/user CSV + JSON reports with IVA |
@@ -29,17 +33,18 @@ Includes modules for Tuendi (ride-hailing/deliveries), restaurants, tourism, rea
 | Referral | `referral_module.py` | Unique codes, rewards, coupons |
 | Tourism | `tourism_router.py` | Tourist places and bookings |
 | Properties | `properties_router.py` | Real estate listings |
+| Pitch | `pitch_module.py` | Investor pitch deck data |
 
 ## Implemented Features (March 2026)
 - [x] Auth (email/password + Google OAuth, JWT tokens, unified system)
-- [x] User tiers (Bronze→Silver→Gold→Platinum→VIP), points system, rewards
+- [x] User tiers (Bronze->Silver->Gold->Platinum->VIP), points system, rewards
 - [x] Daily Streak system with milestones and point multipliers
 - [x] Advanced Coupon system (percent/fixed/free_delivery, tier-locked, usage limits)
-- [x] Payment Gateway (Multicaixa Express, Unitel Money, BAI Paga, Transferência Bancária)
+- [x] Payment Gateway (Multicaixa Express, Unitel Money, BAI Paga, Transferencia Bancaria)
 - [x] Report Export (Admin/Partner/User CSV + JSON with IVA 14%)
 - [x] Role-based UI restrictions (admin/partner/user visibility)
 - [x] Dashboard with streak badge, quick tools, role-based links
-- [x] Module Interactivity: ride/delivery/order completion → points + wallet + notifications
+- [x] Module Interactivity: ride/delivery/order completion -> points + wallet + notifications
 - [x] Tuendi: vehicle types, rides, deliveries, driver assignment, chat
 - [x] Restaurants: search, filters, menu, cart, checkout, reviews/ratings
 - [x] Tourism: listings, detail, bookings
@@ -47,9 +52,12 @@ Includes modules for Tuendi (ride-hailing/deliveries), restaurants, tourism, rea
 - [x] Partner: tiers, analytics, bank details, menu CRUD, incoming orders
 - [x] Admin: config, user mgmt, doc review, IVA toggle
 - [x] Notifications, Referral system, Wallet, Profile
-- [x] **Pitch Deck**: Apresentação interativa (/pitch) + export HTML/PDF com mercado, receita, custos, roadmap, legal, parcerias, marketing, testes, equipa, Série A
-- [x] **Landing Page completa**: Hero, Funcionalidades, Como Funciona, Preços, Equipa, Testemunhos, Roadmap público, FAQ, Blog, Contacto
-- [x] **Site Standalone**: HTML/CSS/JS puro em `/standalone-site/` com script de instalação universal (Nginx/Apache/Docker)
+- [x] Pitch Deck: Interactive presentation + export HTML/PDF
+- [x] Landing Page: Hero, Features, How it Works, Pricing, Team, Testimonials, FAQ
+- [x] Static Site: HTML/CSS/JS in /standalone-site/ with deploy script
+- [x] **Mobile Conversion (Capacitor.js v7)**: iOS and Android project files generated
+- [x] **Backend Refactoring**: server.py reduced from 1007 to ~280 lines; rides_module.py and restaurants_module.py extracted
+- [x] **Dedicated Pytest Tests**: 53+ tests (refactoring validation + full feature coverage)
 
 ## Simulated/Mocked
 - Payment gateway (confirmation codes generated locally, no real API)

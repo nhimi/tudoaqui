@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TudoAqui</string>
+    <string name="title_activity_main">TudoAqui</string>
+    <string name="package_name">com.tudoaqui.app</string>
+    <string name="custom_url_scheme">com.tudoaqui.app</string>
+</resources>
